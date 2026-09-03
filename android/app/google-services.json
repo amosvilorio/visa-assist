@@ -1,0 +1,70 @@
+{
+  "project_info": {
+    "project_number": "462394857537",
+    "project_id": "visa-assist-c9d42",
+    "storage_bucket": "visa-assist-c9d42.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:462394857537:android:ba1792ff0d3cbadc9ccec0",
+        "android_client_info": {
+          "package_name": "com.avm.visaassist"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "462394857537-672b7mlvh0vnq1lds2arl6hd30mhdc11.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.avm.visaassist",
+            "certificate_hash": "07309f8ce0c5fb46d88fa921b5d28b626f6db2b3"
+          }
+        },
+        {
+          "client_id": "462394857537-7erd7ravjd38u8k1rjb50aq8e7rq3dm4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.avm.visaassist",
+            "certificate_hash": "ff3ff56223c51eee9f709cbb30ce216781774d9b"
+          }
+        },
+        {
+          "client_id": "462394857537-v1d9b8bie219qga8o4nmhb650oq3sdg1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.avm.visaassist",
+            "certificate_hash": "a5a77174de5d23d5e70b5a6107949d2e6580cd58"
+          }
+        },
+        {
+          "client_id": "462394857537-i39gvuimgevlp6aikje2g7n1gl4c019n.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBa-oataJfx9z6h5Omh6FTQDZCfbSjMlYw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "462394857537-i39gvuimgevlp6aikje2g7n1gl4c019n.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "462394857537-pdfeb2ga4vucbn4nvgfpp9ijqijr1oe8.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.visaApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

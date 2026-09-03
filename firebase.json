@@ -1,0 +1,36 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "visa-assist-c9d42",
+          "appId": "1:462394857537:android:ba1792ff0d3cbadc9ccec0",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "visa-assist-c9d42",
+          "configurations": {
+            "android": "1:462394857537:android:ba1792ff0d3cbadc9ccec0",
+            "ios": "1:462394857537:ios:29f7af557347730c9ccec0"
+          }
+        }
+      }
+    }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "disallowLegacyRuntimeConfig": true,
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ]
+    }
+  ]
+}
