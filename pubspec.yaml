@@ -2,7 +2,7 @@ name: visa_app
 description: Aplicación de asistencia para solicitudes de visa.
 publish_to: 'none'
 
-version: 1.0.0+10
+version: 1.0.0+11
 
 environment:
   sdk: ^3.11.1
