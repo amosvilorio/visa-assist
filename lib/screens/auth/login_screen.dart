@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/auth_service.dart';
 import '../../utils/app_colors.dart';
 import 'register_screen.dart';
+import 'package:flutter/foundation.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -224,17 +225,37 @@ class _LoginScreenState extends State<LoginScreen> {
 
     final error = await AuthService().loginWithGoogle();
 
+    if (!mounted) return;
+
     setState(() => cargando = false);
 
-    if (error == null) {
-      if (!mounted) return;
-
-      setState(() {
-        cargando = false;
-      });
-    } else {
+    if (error != null) {
       mensaje(error);
+      return;
     }
+
+    Navigator.of(context).popUntil(
+          (route) => route.isFirst,
+    );
+  }
+
+  Future<void> loginApple() async {
+    setState(() => cargando = true);
+
+    final error = await AuthService().loginWithApple();
+
+    if (!mounted) return;
+
+    setState(() => cargando = false);
+
+    if (error != null) {
+      mensaje(error);
+      return;
+    }
+
+    Navigator.of(context).popUntil(
+          (route) => route.isFirst,
+    );
   }
 
   Future<void> _cargarCuentaGuardada() async {
@@ -732,6 +753,61 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                       ),
+
+                      // =================================================
+// APPLE — SOLO iOS
+// =================================================
+
+                      if (!kIsWeb &&
+                          defaultTargetPlatform == TargetPlatform.iOS) ...[
+                        const SizedBox(height: 12),
+
+                        SizedBox(
+                          width: double.infinity,
+                          height: altoBoton,
+                          child: OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(
+                                color: Colors.black,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                  16,
+                                ),
+                              ),
+                              backgroundColor: Colors.black,
+                              padding: EdgeInsets.zero,
+                            ),
+                            onPressed:
+                            cargando ? null : loginApple,
+                            child: Row(
+                              mainAxisAlignment:
+                              MainAxisAlignment.center,
+                              children: [
+
+                                const Icon(
+                                  Icons.apple,
+                                  color: Colors.white,
+                                  size: 25,
+                                ),
+
+                                const SizedBox(width: 10),
+
+                                Text(
+                                  "Continuar con Apple",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize:
+                                    pantallaPequena ? 15 : 16,
+                                    fontWeight:
+                                    FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
 
                       // =================================================
                       // CREAR CUENTA

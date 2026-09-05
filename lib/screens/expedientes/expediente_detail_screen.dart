@@ -98,31 +98,24 @@ class _ExpedienteDetailScreenState
 
       ),
 
-
       body: ListView(
 
-          padding: const EdgeInsets.symmetric(
-
-            horizontal: 20,
-
-            vertical: 8,
-
-          ),
-
+        padding: const EdgeInsets.fromLTRB(
+          20,
+          8,
+          20,
+          90,
+        ),
 
           children: [
-
-
 
       //------------------------------------
       // CABECERA
       //------------------------------------
 
-
       Container(
 
       padding: const EdgeInsets.all(22),
-
 
       decoration: BoxDecoration(
 

@@ -359,6 +359,145 @@ class AuthService {
   }
 
   //==================================================
+  // LOGIN CON APPLE
+  //==================================================
+
+  Future<String?> loginWithApple() async {
+    try {
+      final appleProvider = AppleAuthProvider();
+
+      final userCredential =
+      await _auth.signInWithProvider(
+        appleProvider,
+      );
+
+      final firebaseUser =
+          userCredential.user;
+
+      if (firebaseUser == null) {
+        return "No se pudo obtener el usuario de Apple.";
+      }
+
+      final uid = firebaseUser.uid;
+
+      print("==========================================");
+      print("APPLE LOGIN");
+      print("UID: $uid");
+      print("EMAIL: ${firebaseUser.email}");
+      print("NOMBRE: ${firebaseUser.displayName}");
+      print("==========================================");
+
+      //==================================================
+      // BUSCAR USUARIO EN FIRESTORE
+      //==================================================
+
+      final userRef = _users.doc(uid);
+
+      final doc = await userRef.get();
+
+      //==================================================
+      // SI NO EXISTE, CREARLO COMO CLIENTE
+      //==================================================
+
+      if (!doc.exists) {
+        final now = Timestamp.now();
+
+        final user = AppUser(
+          uid: uid,
+          name: firebaseUser.displayName ?? "",
+          lastName: "",
+          email: firebaseUser.email ?? "",
+          phone: firebaseUser.phoneNumber ?? "",
+          photo: firebaseUser.photoURL ?? "",
+          role: "client",
+          status: "active",
+          country: "",
+          language: "es",
+          assignedAgentId: "",
+          createdAt: now,
+          updatedAt: now,
+        );
+
+        await userRef.set(
+          user.toMap(),
+        );
+
+        print(
+          "APPLE: USUARIO CREADO EN FIRESTORE "
+              "users/$uid",
+        );
+
+        await _saveRoleLocally("client");
+      } else {
+        //================================================
+        // EL USUARIO YA EXISTE
+        // NO CAMBIAMOS SU ROL
+        //================================================
+
+        final data =
+        doc.data() as Map<String, dynamic>;
+
+        final role =
+        data["role"]?.toString();
+
+        print(
+          "APPLE: USUARIO YA EXISTE EN FIRESTORE",
+        );
+
+        print(
+          "APPLE: ROL ACTUAL: $role",
+        );
+
+        if (role != null && role.isNotEmpty) {
+          await _saveRoleLocally(role);
+        }
+
+        // Actualizamos solamente el correo.
+        // NO tocamos el nombre ni el rol.
+        await userRef.set(
+          {
+            "email": firebaseUser.email ?? "",
+            "updatedAt": Timestamp.now(),
+          },
+          SetOptions(merge: true),
+        );
+      }
+
+      //==================================================
+      // INICIALIZAR FCM PARA ESTA CUENTA
+      //==================================================
+
+      try {
+        await NotificationService().initialize();
+
+        print(
+          "APPLE: NOTIFICACIONES INICIALIZADAS "
+              "PARA $uid",
+        );
+      } catch (e) {
+        print(
+          "APPLE: ERROR INICIALIZANDO "
+              "NOTIFICACIONES: $e",
+        );
+      }
+
+      return null;
+    } on FirebaseAuthException catch (e) {
+      print(
+        "ERROR FIREBASE APPLE: ${e.message}",
+      );
+
+      return e.message;
+    } catch (e) {
+      print(
+        "ERROR LOGIN APPLE: $e",
+      );
+
+      return e.toString();
+    }
+  }
+
+  //==================================================
   // OBTENER APP USER
   //==================================================
 

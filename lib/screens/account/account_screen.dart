@@ -160,6 +160,14 @@ class _AccountScreenState extends State<AccountScreen> {
 
     if (confirmar == true) {
       await AuthService().logout();
+
+      if (!mounted) {
+        return;
+      }
+
+      Navigator.of(context).popUntil(
+            (route) => route.isFirst,
+      );
     }
   }
 

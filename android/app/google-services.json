@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "462394857537-3veaj5h4sjir32guljlkkfvitessunf0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.avm.visaassist",
+            "certificate_hash": "3cfe88983dd7b0eac50723dab1625a019db4aecc"
+          }
+        },
+        {
           "client_id": "462394857537-672b7mlvh0vnq1lds2arl6hd30mhdc11.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

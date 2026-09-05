@@ -214,104 +214,163 @@ class _MyExpedientesScreenState
                       ],
                     ),
 
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(24),
+                    child: Column(
+                      children: [
 
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ExpedienteDetailScreen(
-                              expediente: expediente,
+                        //==================================================
+                        // INFORMACIÓN DEL EXPEDIENTE
+                        //==================================================
+
+                        InkWell(
+                          borderRadius: BorderRadius.circular(24),
+
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ExpedienteDetailScreen(
+                                  expediente: expediente,
+                                ),
+                              ),
+                            );
+                          },
+
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+
+                            child: Row(
+                              children: [
+
+                                Container(
+                                  width: 64,
+                                  height: 64,
+
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFFE8EEF9),
+                                    shape: BoxShape.circle,
+                                  ),
+
+                                  child: const Icon(
+                                    Icons.description_outlined,
+                                    color: Color(0xFF082D6B),
+                                    size: 34,
+                                  ),
+                                ),
+
+                                const SizedBox(width: 15),
+
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                    CrossAxisAlignment.start,
+
+                                    children: [
+
+                                      Text(
+                                        expediente.applicant != null
+                                            ? "Solicitud de ${expediente.applicant!.firstName} ${expediente.applicant!.lastName}"
+                                            : "Solicitud en proceso",
+
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+
+                                        style: const TextStyle(
+                                          color: Color(0xFF111111),
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+
+                                      const SizedBox(height: 8),
+
+                                      Container(
+                                        padding:
+                                        const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 6,
+                                        ),
+
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFE8EEF9),
+                                          borderRadius:
+                                          BorderRadius.circular(20),
+                                        ),
+
+                                        child: Text(
+                                          _getCurrentStage(
+                                            expediente.currentStep,
+                                          ),
+
+                                          style: const TextStyle(
+                                            color: Color(0xFF0A3B91),
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                                const SizedBox(width: 8),
+
+                                const Icon(
+                                  Icons.arrow_forward_ios_rounded,
+                                  color: Color(0xFF082D6B),
+                                  size: 25,
+                                ),
+                              ],
                             ),
                           ),
-                        );
-                      },
-
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-
-                        child: Row(
-                          children: [
-
-                            Container(
-                              width: 64,
-                              height: 64,
-
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFE8EEF9),
-                                shape: BoxShape.circle,
-                              ),
-
-                              child: const Icon(
-                                Icons.description_outlined,
-                                color: Color(0xFF082D6B),
-                                size: 34,
-                              ),
-                            ),
-
-                            const SizedBox(width: 15),
-
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-
-                                children: [
-
-                                  Text(
-                                    expediente.applicant != null
-                                        ? "Solicitud de ${expediente.applicant!.firstName} ${expediente.applicant!.lastName}"
-                                        : "Solicitud en proceso",
-
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-
-                                    style: const TextStyle(
-                                      color: Color(0xFF111111),
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-
-                                  const SizedBox(height: 8),
-
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 6,
-                                    ),
-
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFE8EEF9),
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-
-                                    child: Text(
-                                      _getCurrentStage(
-                                        expediente.currentStep,
-                                      ),
-
-                                      style: const TextStyle(
-                                        color: Color(0xFF0A3B91),
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            const SizedBox(width: 8),
-
-                            const Icon(
-                              Icons.arrow_forward_ios_rounded,
-                              color: Color(0xFF082D6B),
-                              size: 25,
-                            ),
-                          ],
                         ),
-                      ),
+
+                        //==================================================
+                        // BOTÓN ELIMINAR
+                        //==================================================
+
+                        if (expediente.paymentStatus != "Aprobado" &&
+                            expediente.paymentStatus != "En revisión") ...[
+
+                          const Divider(
+                            height: 1,
+                            indent: 20,
+                            endIndent: 20,
+                          ),
+
+                          SizedBox(
+                            width: double.infinity,
+                            child: TextButton.icon(
+                              onPressed: () {
+                                _confirmDeleteExpediente(
+                                  context,
+                                  expediente.id,
+                                );
+                              },
+
+                              icon: const Icon(
+                                Icons.delete_outline,
+                                color: Colors.red,
+                                size: 27,
+                              ),
+
+                              label: const Text(
+                                "ELIMINAR EXPEDIENTE",
+                                style: TextStyle(
+                                  color: Colors.red,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   );
 
@@ -326,7 +385,7 @@ class _MyExpedientesScreenState
           const SizedBox(height: 35),
 
           Container(
-            height: 76,
+            height: 100,
 
             decoration: BoxDecoration(
               color: Colors.white,
@@ -568,5 +627,107 @@ class _MyExpedientesScreenState
 
     }
 
+  }
+
+  //==================================================
+  // CONFIRMAR ELIMINACIÓN DEL EXPEDIENTE
+  //==================================================
+
+  Future<void> _confirmDeleteExpediente(
+      BuildContext context,
+      String expedienteId,
+      ) async {
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text(
+            "¿Eliminar expediente?",
+          ),
+
+          content: const Text(
+            "Si abandonas este expediente se eliminará "
+                "toda la información que hayas completado. "
+                "Esta acción no se puede deshacer.",
+          ),
+
+          actions: [
+
+            TextButton(
+              onPressed: () {
+                Navigator.pop(
+                  dialogContext,
+                  false,
+                );
+              },
+
+              child: const Text(
+                "CANCELAR",
+              ),
+            ),
+
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(
+                  dialogContext,
+                  true,
+                );
+              },
+
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+
+              child: const Text(
+                "ELIMINAR",
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+
+    try {
+
+      await _expedienteService
+          .deleteExpedienteIfNoPayment(
+        expedienteId: expedienteId,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Expediente eliminado correctamente.",
+          ),
+        ),
+      );
+
+    } catch (e) {
+
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.toString().replaceFirst(
+              "Exception: ",
+              "",
+            ),
+          ),
+        ),
+      );
+    }
   }
 }

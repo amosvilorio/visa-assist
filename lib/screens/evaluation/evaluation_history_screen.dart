@@ -310,13 +310,7 @@ class _EvaluationCard extends StatelessWidget {
     // PERMITIR ELIMINACIÓN
     //==================================================
 
-    final premiumPaid =
-        data['premiumPaid'] == true;
-
-    final canDelete =
-        !premiumPaid &&
-            status != 'payment_pending' &&
-            status != 'pending_processing';
+    final canDelete = true;
 
     //==================================================
     // ESTADO VISUAL

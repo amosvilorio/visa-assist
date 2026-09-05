@@ -823,4 +823,76 @@ class ExpedienteService {
       "updatedAt": Timestamp.now(),
     });
   }
+
+  //==================================================
+  // ELIMINAR EXPEDIENTE ABANDONADO
+  //==================================================
+
+  Future<void> deleteExpedienteIfNoPayment({
+    required String expedienteId,
+  }) async {
+
+    final user = _auth.currentUser;
+
+    if (user == null) {
+      throw Exception("Usuario no autenticado.");
+    }
+
+    //==================================================
+    // VERIFICAR QUE EL EXPEDIENTE EXISTE
+    //==================================================
+
+    final expedienteDoc =
+    await _collection.doc(expedienteId).get();
+
+    if (!expedienteDoc.exists) {
+      throw Exception("El expediente no existe.");
+    }
+
+    final expedienteData =
+    expedienteDoc.data() as Map<String, dynamic>;
+
+    //==================================================
+    // VERIFICAR QUE PERTENECE AL USUARIO
+    //==================================================
+
+    if (expedienteData["userId"] != user.uid) {
+      throw Exception(
+        "No tienes permiso para eliminar este expediente.",
+      );
+    }
+
+    //==================================================
+    // BUSCAR PAGOS ASOCIADOS
+    //==================================================
+
+    final paymentsSnapshot =
+    await _firestore
+        .collection("payments")
+        .where(
+      "userId",
+      isEqualTo: user.uid,
+    )
+        .where(
+      "expedienteId",
+      isEqualTo: expedienteId,
+    )
+        .get();
+
+    //==================================================
+    // NO PERMITIR ELIMINACIÓN SI EXISTE UN PAGO
+    //==================================================
+
+    if (paymentsSnapshot.docs.isNotEmpty) {
+      throw Exception(
+        "No puedes eliminar este expediente porque ya tiene un pago asociado.",
+      );
+    }
+
+    //==================================================
+    // ELIMINAR EXPEDIENTE
+    //==================================================
+
+    await _collection.doc(expedienteId).delete();
+  }
 }
