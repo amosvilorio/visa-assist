@@ -93,6 +93,9 @@
     <key>NSCameraUsageDescription</key>
     <string>Visa Assist necesita acceso a la cámara para tomar fotografías de documentos necesarios para tu solicitud de visa.</string>
 
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Visa Assist necesita acceso a tu ubicación para ayudarte a completar información relacionada con tu solicitud de visa.</string>
+
     <!-- Permiso para seleccionar fotografías -->
     <key>NSPhotoLibraryUsageDescription</key>
     <string>Visa Assist necesita acceso a tus fotos para seleccionar documentos e imágenes necesarios para tu solicitud de visa.</string>
