@@ -366,6 +366,9 @@ class AuthService {
     try {
       final appleProvider = AppleAuthProvider();
 
+      appleProvider.addScope('email');
+      appleProvider.addScope('name');
+
       final userCredential =
       await _auth.signInWithProvider(
         appleProvider,

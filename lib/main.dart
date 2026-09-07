@@ -63,6 +63,8 @@ Future<void> _firebaseMessagingBackgroundHandler(
   }
 }
 
+
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -86,6 +88,7 @@ class VisaAssistApp extends StatelessWidget {
       title: 'Visa Assist',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
+      navigatorKey: NotificationService.navigatorKey,
       home: const FirebaseBootstrap(),
     );
   }

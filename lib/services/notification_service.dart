@@ -2,9 +2,21 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import '../models/expediente.dart';
+import '../services/expediente_service.dart';
+import '../screens/expedientes/visa_assist_process_screen.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class NotificationService {
+
+  // =====================================================
+  // NAVEGACIÓN DESDE NOTIFICACIONES
+  // =====================================================
+
+  static final GlobalKey<NavigatorState> navigatorKey =
+  GlobalKey<NavigatorState>();
+
   final FirebaseFirestore _firestore =
       FirebaseFirestore.instance;
 
@@ -286,6 +298,10 @@ class NotificationService {
             debugPrint(
               "========================================",
             );
+
+            _handleNotificationData(
+              Map<String, dynamic>.from(message.data),
+            );
           },
         );
 
@@ -311,6 +327,12 @@ class NotificationService {
 
           debugPrint(
             "========================================",
+          );
+
+          _handleNotificationData(
+            Map<String, dynamic>.from(
+              initialMessage.data,
+            ),
           );
         }
 
@@ -384,6 +406,157 @@ class NotificationService {
   }
 
   // =====================================================
+  // PROCESAR NAVEGACIÓN DE UNA NOTIFICACIÓN
+  // =====================================================
+
+  Future<void> _handleNotificationData(
+      Map<String, dynamic> data,
+      ) async {
+    try {
+      debugPrint(
+        "========================================",
+      );
+
+      debugPrint(
+        "PROCESANDO NAVEGACIÓN DE NOTIFICACIÓN",
+      );
+
+      debugPrint(
+        "DATA: $data",
+      );
+
+      final type =
+          data["type"]?.toString() ?? "";
+
+      final expedienteId =
+          data["expedienteId"]?.toString() ?? "";
+
+      final notificationId =
+      data["notificationId"]?.toString();
+
+      debugPrint(
+        "TYPE: $type",
+      );
+
+      debugPrint(
+        "EXPEDIENTE ID: $expedienteId",
+      );
+
+      debugPrint(
+        "NOTIFICATION ID: $notificationId",
+      );
+
+      // =================================================
+      // MARCAR COMO LEÍDA
+      // =================================================
+
+      if (notificationId != null &&
+          notificationId.isNotEmpty) {
+        await markAsRead(
+          notificationId: notificationId,
+        );
+      }
+
+      // =================================================
+      // NOTIFICACIONES QUE PERTENECEN A UN EXPEDIENTE
+      // =================================================
+
+      const expedienteNotificationTypes = {
+        "ds160_uploaded",
+        "cas_credentials_updated",
+        "cas_appointment_updated",
+        "interview_appointment_updated",
+        "mrv_amount_response",
+        "service_payment_approved",
+        "service_payment_rejected",
+      };
+
+      if (!expedienteNotificationTypes.contains(type)) {
+        debugPrint(
+          "NOTIFICACIÓN SIN NAVEGACIÓN DE EXPEDIENTE: "
+              "$type",
+        );
+        return;
+      }
+
+      if (expedienteId.isEmpty) {
+        debugPrint(
+          "NO SE PUEDE NAVEGAR: "
+              "LA NOTIFICACIÓN NO TIENE expedienteId.",
+        );
+        return;
+      }
+
+      // =================================================
+      // OBTENER EL EXPEDIENTE EXACTO
+      // =================================================
+
+      final expediente =
+      await ExpedienteService()
+          .getExpedienteById(expedienteId);
+
+      if (expediente == null) {
+        debugPrint(
+          "NO SE ENCONTRÓ EL EXPEDIENTE: "
+              "$expedienteId",
+        );
+        return;
+      }
+
+      // =================================================
+      // ESPERAR A QUE EL NAVIGATOR ESTÉ DISPONIBLE
+      // =================================================
+
+      final navigator =
+          navigatorKey.currentState;
+
+      if (navigator == null) {
+        debugPrint(
+          "NAVIGATOR AÚN NO ESTÁ DISPONIBLE.",
+        );
+        return;
+      }
+
+      // =================================================
+      // ABRIR PROCESO VISA ASSIST
+      // =================================================
+
+      navigator.push(
+        MaterialPageRoute(
+          builder: (_) =>
+              VisaAssistProcessScreen(
+                expediente: expediente,
+              ),
+        ),
+      );
+
+      debugPrint(
+        "NAVEGACIÓN REALIZADA CORRECTAMENTE.",
+      );
+
+      debugPrint(
+        "TIPO: $type",
+      );
+
+      debugPrint(
+        "EXPEDIENTE: ${expediente.id}",
+      );
+
+      debugPrint(
+        "========================================",
+      );
+    } catch (e, stackTrace) {
+      debugPrint(
+        "ERROR PROCESANDO NAVEGACIÓN: $e",
+      );
+
+      debugPrint(
+        "STACK TRACE: $stackTrace",
+      );
+    }
+  }
+
+  // =====================================================
   // AL TOCAR NOTIFICACIÓN LOCAL
   // =====================================================
 
@@ -397,6 +570,50 @@ class NotificationService {
     debugPrint(
       "PAYLOAD: ${response.payload}",
     );
+
+    if (response.payload == null ||
+        response.payload!.isEmpty) {
+      return;
+    }
+
+    try {
+      final payload =
+      response.payload!;
+
+      final cleanedPayload =
+      payload
+          .replaceAll("{", "")
+          .replaceAll("}", "");
+
+      final parts =
+      cleanedPayload.split(", ");
+
+      final data =
+      <String, dynamic>{};
+
+      for (final part in parts) {
+        final separator =
+        part.indexOf(":");
+
+        if (separator == -1) {
+          continue;
+        }
+
+        final key =
+        part.substring(0, separator).trim();
+
+        final value =
+        part.substring(separator + 1).trim();
+
+        data[key] = value;
+      }
+
+      _handleNotificationData(data);
+    } catch (e) {
+      debugPrint(
+        "ERROR LEYENDO PAYLOAD LOCAL: $e",
+      );
+    }
   }
 
   // =====================================================
@@ -470,8 +687,7 @@ class NotificationService {
 
   Future<void> clearToken() async {
     try {
-      final user =
-          _auth.currentUser;
+      final user = _auth.currentUser;
 
       if (user == null) {
         debugPrint(
@@ -479,6 +695,10 @@ class NotificationService {
         );
         return;
       }
+
+      // =================================================
+      // 1. ELIMINAR EL TOKEN DE LA CUENTA EN FIRESTORE
+      // =================================================
 
       await _firestore
           .collection("users")
@@ -494,6 +714,20 @@ class NotificationService {
       debugPrint(
         "FCM TOKEN ELIMINADO DE "
             "users/${user.uid}",
+      );
+
+      // =================================================
+      // 2. ELIMINAR EL TOKEN FCM DEL DISPOSITIVO
+      //
+      // Esto evita que el dispositivo siga asociado
+      // al token anterior mientras otra cuenta inicia
+      // sesión.
+      // =================================================
+
+      await _messaging.deleteToken();
+
+      debugPrint(
+        "FCM TOKEN ELIMINADO DEL DISPOSITIVO.",
       );
     } catch (e) {
       debugPrint(

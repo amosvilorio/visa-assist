@@ -422,19 +422,48 @@ class _EvaluationQuestionScreenState
       return true;
     }
 
+    final dependsOn =
+    question.dependsOn!.trim();
+
     // ----------------------------------------------------------
-    // TODAVÍA NO EXISTE LA RESPUESTA
+    // LA PREGUNTA DE LA QUE DEPENDE DEBE EXISTIR
     // ----------------------------------------------------------
 
-    if (!answers.containsKey(
-      question.dependsOn,
-    )) {
+    final parentQuestionIndex =
+    questions.indexWhere(
+          (q) => q.questionKey == dependsOn,
+    );
 
+    if (parentQuestionIndex < 0) {
+      return false;
+    }
+
+    final parentQuestion =
+    questions[parentQuestionIndex];
+
+    // ----------------------------------------------------------
+    // SI LA PREGUNTA PADRE ESTÁ OCULTA,
+    // ESTA TAMBIÉN DEBE ESTAR OCULTA.
+    // ----------------------------------------------------------
+
+    if (parentQuestion.questionKey !=
+        question.questionKey) {
+
+      if (!shouldShowQuestion(parentQuestion)) {
+        return false;
+      }
+    }
+
+    // ----------------------------------------------------------
+    // LA RESPUESTA DEL PADRE DEBE EXISTIR
+    // ----------------------------------------------------------
+
+    if (!answers.containsKey(dependsOn)) {
       return false;
     }
 
     final answer =
-    answers[question.dependsOn];
+    answers[dependsOn];
 
     // ----------------------------------------------------------
     // SIN VALORES DE DEPENDENCIA
@@ -447,16 +476,27 @@ class _EvaluationQuestionScreenState
     }
 
     // ----------------------------------------------------------
+    // NORMALIZAR VALORES
+    // ----------------------------------------------------------
+
+    final allowedValues =
+    question.dependsValues!
+        .map(
+          (value) =>
+          value.toString().trim().toLowerCase(),
+    )
+        .toList();
+
+    // ----------------------------------------------------------
     // RESPUESTA MÚLTIPLE
     // ----------------------------------------------------------
 
     if (answer is List) {
 
       return answer.any(
-            (value) =>
-            question.dependsValues.contains(
-              value,
-            ),
+            (value) => allowedValues.contains(
+          value.toString().trim().toLowerCase(),
+        ),
       );
     }
 
@@ -464,8 +504,8 @@ class _EvaluationQuestionScreenState
     // RESPUESTA SIMPLE
     // ----------------------------------------------------------
 
-    return question.dependsValues.contains(
-      answer,
+    return allowedValues.contains(
+      answer.toString().trim().toLowerCase(),
     );
   }
 

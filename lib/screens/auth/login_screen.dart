@@ -51,18 +51,15 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
 
-      // ==================================================
-      // NO NAVEGAMOS MANUALMENTE
-      //
-      // AuthWrapper detectará automáticamente
-      // el nuevo usuario autenticado.
-      // ==================================================
-
       if (!mounted) return;
 
       setState(() {
         cargando = false;
       });
+
+      Navigator.of(context).popUntil(
+            (route) => route.isFirst,
+      );
     } else {
       mensaje(error);
     }

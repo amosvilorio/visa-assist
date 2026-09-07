@@ -417,35 +417,11 @@ class EvaluationService {
       );
     }
 
-    // Si ya fue pagada, JAMÁS se puede eliminar
-    final premiumPaid =
-        data['premiumPaid'] == true;
+    // La eliminación se confirma previamente
+    // desde la pantalla del historial.
+    // Si el usuario confirmó, se permite eliminar
+    // aunque exista un pago asociado.
 
-    if (premiumPaid) {
-      throw Exception(
-        'Esta evaluación ya tiene un pago realizado y no puede eliminarse.',
-      );
-    }
-
-    // Si existe un pago enviado para revisión,
-    // tampoco permitimos eliminarlo.
-    final status =
-        data['status'] ?? '';
-
-    if (status == 'payment_pending') {
-      throw Exception(
-        'Esta evaluación tiene un pago pendiente de revisión y no puede eliminarse.',
-      );
-    }
-
-    // Si está siendo procesada, tampoco se elimina.
-    if (status == 'pending_processing') {
-      throw Exception(
-        'Esta evaluación está siendo procesada y no puede eliminarse.',
-      );
-    }
-
-    // Si llegó hasta aquí, sí se puede eliminar.
     await _evaluations
         .doc(evaluationId)
         .delete();
