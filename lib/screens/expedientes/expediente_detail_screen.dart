@@ -880,7 +880,9 @@ class _ExpedienteDetailScreenState
     // PAGO MRV
     //==================================================
 
-    else if (expediente.mrvStatus != "Pagado") {
+    else if (expediente.mrvStatus != "Pagado" &&
+        expediente.mrvStatus != "pago mrv confirmado" &&
+        expediente.mrvStatus != "Pago MRV confirmado") {
 
       title = "Pago MRV";
 

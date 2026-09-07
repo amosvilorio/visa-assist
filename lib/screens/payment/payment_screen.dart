@@ -416,7 +416,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                           Map<String,
                               dynamic>>>(
                     stream: _db
-                        .collection("banks")
+                        .collection("bank_accounts")
                         .where(
                       "active",
                       isEqualTo: true,

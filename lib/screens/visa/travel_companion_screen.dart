@@ -211,7 +211,9 @@ class _TravelCompanionScreenState
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => const UsContactScreen(),
+        builder: (_) => UsContactScreen(
+          expediente: _expediente!,
+        ),
       ),
     );
   }

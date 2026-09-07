@@ -96,6 +96,20 @@ class NotificationService {
       );
 
       // =================================================
+// CONFIGURAR PRESENTACIÓN DE NOTIFICACIONES EN iOS
+// =================================================
+
+      await _messaging.setForegroundNotificationPresentationOptions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+
+      debugPrint(
+        "PRESENTACIÓN DE NOTIFICACIONES iOS CONFIGURADA.",
+      );
+
+      // =================================================
       // CONFIGURAR NOTIFICACIONES LOCALES
       // =================================================
 
@@ -104,9 +118,17 @@ class NotificationService {
         '@mipmap/ic_launcher',
       );
 
+      const darwinSettings =
+      DarwinInitializationSettings(
+        requestAlertPermission: false,
+        requestBadgePermission: false,
+        requestSoundPermission: false,
+      );
+
       const initializationSettings =
       InitializationSettings(
         android: androidSettings,
+        iOS: darwinSettings,
       );
 
       if (!_initialized) {
@@ -150,6 +172,30 @@ class NotificationService {
       // =================================================
       // OBTENER TOKEN FCM
       // =================================================
+
+      // =================================================
+// OBTENER TOKEN APNs EN iOS
+// =================================================
+
+      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+        final apnsToken = await _messaging.getAPNSToken();
+
+        debugPrint(
+          "========================================",
+        );
+
+        debugPrint(
+          "APNs TOKEN: $apnsToken",
+        );
+
+        debugPrint(
+          "========================================",
+        );
+      }
+
+// =================================================
+// OBTENER TOKEN FCM
+// =================================================
 
       final token =
       await _messaging.getToken();

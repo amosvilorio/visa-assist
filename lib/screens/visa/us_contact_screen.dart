@@ -411,7 +411,7 @@ class _UsContactScreenState extends State<UsContactScreen> {
             child: Column(
               children: [
                 const VisaStepHeader(
-                  currentStep: 11,
+                  currentStep: 12,
                   totalSteps: 18,
                   title: "Contacto en Estados Unidos",
                   description:
