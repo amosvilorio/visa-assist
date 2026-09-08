@@ -100,5 +100,28 @@
     <key>NSPhotoLibraryUsageDescription</key>
     <string>Visa Assist necesita acceso a tus fotos para seleccionar documentos e imágenes necesarios para tu solicitud de visa.</string>
 
+    <!-- Google Sign-In -->
+
+    <key>GIDClientID</key>
+    <string>462394857537-8jfeon0rls12icorcgkioa583unem7ri.apps.googleusercontent.com</string>
+
+    <key>GIDServerClientID</key>
+    <string>462394857537-i39gvuimgevlp6aikje2g7n1gl4c019n.apps.googleusercontent.com</string>
+
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>com.googleusercontent.apps.462394857537-8jfeon0rls12icorcgkioa583unem7ri</string>
+            </array>
+        </dict>
+    </array>
+
+    <!-- Fin Google Sign-In -->
+
 </dict>
 </plist>

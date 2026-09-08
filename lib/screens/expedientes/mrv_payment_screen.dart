@@ -59,6 +59,7 @@ class _MrvPaymentScreenState
         mrvPrice = price;
         loading = false;
       });
+
     } catch (e) {
       debugPrint(
         "Error cargando tarifa MRV: $e",
@@ -689,10 +690,99 @@ class _MrvPaymentScreenState
 
           const SizedBox(height: 18),
 
+          Container(
+            width: double.infinity,
+
+            padding: const EdgeInsets.all(16),
+
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.08),
+
+              borderRadius:
+              BorderRadius.circular(14),
+
+              border: Border.all(
+                color:
+                AppColors.primary.withOpacity(0.25),
+              ),
+            ),
+
+            child: Column(
+              crossAxisAlignment:
+              CrossAxisAlignment.start,
+
+              children: [
+
+                const Text(
+                  "Tarifa a convertir",
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight:
+                    FontWeight.bold,
+                  ),
+                ),
+
+                const SizedBox(height: 6),
+
+                Text(
+                  "US\$${mrvPrice.toStringAsFixed(2)}",
+                  style: const TextStyle(
+                    fontSize: 30,
+                    fontWeight:
+                    FontWeight.bold,
+                    color:
+                    AppColors.primary,
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                const Text(
+                  "Solicita el equivalente de esta tarifa "
+                      "en pesos dominicanos. Visa Assist "
+                      "verificará la tasa correspondiente y "
+                      "te indicará el monto exacto que debes "
+                      "depositar.",
+                  style: TextStyle(
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 18),
+
+          SizedBox(
+            width: double.infinity,
+            height: 55,
+
+            child: ElevatedButton.icon(
+              icon: const Icon(
+                Icons.currency_exchange,
+              ),
+
+              label: const Text(
+                "SOLICITAR MONTO EN RD\$",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight:
+                  FontWeight.bold,
+                ),
+              ),
+
+              onPressed: () {
+                _solicitarMontoRD(
+                  expedienteActual:
+                  expedienteActual,
+                );
+              },
+            ),
+          ),
         ],
       );
     }
-
+    
     // ----------------------------------------------------------
     // SOLICITUD PENDIENTE
     // ----------------------------------------------------------
