@@ -4,6 +4,8 @@ import '../../services/expediente_service.dart';
 import '../../models/expediente.dart';
 import '../../utils/app_colors.dart';
 import '../../services/settings_service.dart';
+import '../../services/bank_service.dart';
+import '../../models/bank_account.dart';
 
 class MrvPaymentScreen extends StatefulWidget {
   final Expediente expediente;
@@ -25,6 +27,11 @@ class _MrvPaymentScreenState
 
   final ExpedienteService _expedienteService =
   ExpedienteService();
+
+  final BankService _bankService =
+  BankService();
+
+  BankAccount? selectedBank;
 
   double mrvPrice = 0;
 
@@ -682,33 +689,6 @@ class _MrvPaymentScreenState
 
           const SizedBox(height: 18),
 
-          SizedBox(
-            width: double.infinity,
-            height: 55,
-
-            child:
-            ElevatedButton.icon(
-              icon: const Icon(
-                Icons.request_quote,
-              ),
-
-              label: const Text(
-                "SOLICITAR MONTO EN RD\$",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight:
-                  FontWeight.bold,
-                ),
-              ),
-
-              onPressed: () {
-                _solicitarMontoRD(
-                  expedienteActual:
-                  expedienteActual,
-                );
-              },
-            ),
-          ),
         ],
       );
     }
@@ -828,58 +808,312 @@ class _MrvPaymentScreenState
             ),
           ),
 
-          const SizedBox(height: 18),
+          // ==========================================================
+// CUENTA BANCARIA PARA EL DEPÓSITO
+// ==========================================================
 
-          SizedBox(
-            width: double.infinity,
-            height: 55,
+          StreamBuilder<List<BankAccount>>(
+            stream: _bankService.watchBanks(
+              onlyEnabled: true,
+            ),
 
-            child:
-            ElevatedButton.icon(
-              icon: const Icon(
-                Icons.upload_file,
-              ),
+            builder: (context, bankSnapshot) {
 
-              label: const Text(
-                "ENVIAR COMPROBANTE DE DEPÓSITO",
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight:
-                  FontWeight.bold,
-                ),
-              ),
+              if (bankSnapshot.connectionState ==
+                  ConnectionState.waiting) {
 
-              onPressed: () {
-                final montoMrv = expedienteActual.mrvDopAmount;
-
-                if (montoMrv == null || montoMrv <= 0) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        "El monto de la tarifa MRV todavía no está disponible. "
-                            "Espera a que Visa Assist confirme el monto.",
-                      ),
-                      backgroundColor: Colors.orange,
-                    ),
-                  );
-
-                  return;
-                }
-
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => MrvUploadReceiptScreen(
-                      expedienteId: expedienteActual.id,
-                      bankId: "mrv",
-                      bankName: "Visa Assist",
-                      amount: montoMrv,
-                      currency: "RD\$",
-                    ),
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(20),
+                    child: CircularProgressIndicator(),
                   ),
                 );
-              },
-            ),
+              }
+
+              if (bankSnapshot.hasError) {
+
+                return Padding(
+                  padding:
+                  const EdgeInsets.symmetric(
+                    vertical: 15,
+                  ),
+
+                  child: Text(
+                    "No se pudieron cargar las cuentas bancarias.\n\n"
+                        "${bankSnapshot.error}",
+
+                    textAlign: TextAlign.center,
+                  ),
+                );
+              }
+
+              if (!bankSnapshot.hasData ||
+                  bankSnapshot.data!.isEmpty) {
+
+                return const Padding(
+                  padding:
+                  EdgeInsets.symmetric(
+                    vertical: 15,
+                  ),
+
+                  child: Text(
+                    "No hay cuentas bancarias disponibles "
+                        "para realizar el depósito.",
+
+                    textAlign: TextAlign.center,
+                  ),
+                );
+              }
+
+              final banks =
+              bankSnapshot.data!;
+
+              if (selectedBank == null ||
+                  !banks.any(
+                        (bank) =>
+                    bank.id ==
+                        selectedBank!.id,
+                  )) {
+
+                WidgetsBinding.instance
+                    .addPostFrameCallback(
+                      (_) {
+
+                    if (!mounted) return;
+
+                    setState(() {
+                      selectedBank =
+                          banks.first;
+                    });
+                  },
+                );
+              }
+
+              return Column(
+                crossAxisAlignment:
+                CrossAxisAlignment.start,
+
+                children: [
+
+                  const Text(
+                    "Cuenta para realizar el depósito",
+
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight:
+                      FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  ...banks.map(
+                        (bank) {
+
+                      final isSelected =
+                          selectedBank?.id ==
+                              bank.id;
+
+                      return Card(
+
+                        margin:
+                        const EdgeInsets.only(
+                          bottom: 12,
+                        ),
+
+                        elevation:
+                        isSelected ? 4 : 2,
+
+                        shape:
+                        RoundedRectangleBorder(
+                          borderRadius:
+                          BorderRadius.circular(
+                            16,
+                          ),
+
+                          side: BorderSide(
+                            color: isSelected
+                                ? AppColors.primary
+                                : Colors.transparent,
+
+                            width: 2,
+                          ),
+                        ),
+
+                        child:
+                        RadioListTile<String>(
+
+                          value:
+                          bank.id,
+
+                          groupValue:
+                          selectedBank?.id,
+
+                          onChanged: (value) {
+
+                            final bankSeleccionado =
+                            banks.firstWhere(
+                                  (item) =>
+                              item.id == value,
+                            );
+
+                            setState(() {
+                              selectedBank =
+                                  bankSeleccionado;
+                            });
+                          },
+
+                          title: Text(
+                            bank.bankName,
+
+                            style:
+                            const TextStyle(
+                              fontWeight:
+                              FontWeight.bold,
+                              fontSize: 17,
+                            ),
+                          ),
+
+                          subtitle:
+                          Padding(
+                            padding:
+                            const EdgeInsets.only(
+                              top: 8,
+                            ),
+
+                            child: Column(
+                              crossAxisAlignment:
+                              CrossAxisAlignment.start,
+
+                              children: [
+
+                                Text(
+                                  "Titular: "
+                                      "${bank.accountHolder}",
+                                ),
+
+                                const SizedBox(
+                                  height: 4,
+                                ),
+
+                                Text(
+                                  "Número de cuenta: "
+                                      "${bank.accountNumber}",
+
+                                  style:
+                                  const TextStyle(
+                                    fontWeight:
+                                    FontWeight.bold,
+                                  ),
+                                ),
+
+                                const SizedBox(
+                                  height: 4,
+                                ),
+
+                                Text(
+                                  "Tipo: "
+                                      "${bank.accountType}",
+                                ),
+
+                                const SizedBox(
+                                  height: 4,
+                                ),
+
+                                Text(
+                                  "Moneda: "
+                                      "${bank.currency}",
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  SizedBox(
+                    width: double.infinity,
+                    height: 55,
+
+                    child:
+                    ElevatedButton.icon(
+
+                      icon: const Icon(
+                        Icons.upload_file,
+                      ),
+
+                      label: const Text(
+                        "ENVIAR COMPROBANTE DE DEPÓSITO",
+
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight:
+                          FontWeight.bold,
+                        ),
+                      ),
+
+                      onPressed:
+                      selectedBank == null
+                          ? null
+                          : () {
+
+                        final montoMrv =
+                            expedienteActual
+                                .mrvDopAmount;
+
+                        if (montoMrv == null ||
+                            montoMrv <= 0) {
+
+                          ScaffoldMessenger.of(
+                            context,
+                          ).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                "El monto de la tarifa MRV "
+                                    "todavía no está disponible. "
+                                    "Espera a que Visa Assist "
+                                    "confirme el monto.",
+                              ),
+
+                              backgroundColor:
+                              Colors.orange,
+                            ),
+                          );
+
+                          return;
+                        }
+
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                MrvUploadReceiptScreen(
+                                  expedienteId:
+                                  expedienteActual.id,
+
+                                  bankId:
+                                  selectedBank!.id,
+
+                                  bankName:
+                                  selectedBank!.bankName,
+
+                                  amount:
+                                  montoMrv,
+
+                                  currency:
+                                  "RD\$",
+                                ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ],
       );

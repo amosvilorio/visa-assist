@@ -465,7 +465,25 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             child: CircularProgressIndicator(),
                           ),
                         );
+                      }
 
+                      if (snapshot.hasError) {
+
+                        debugPrint(
+                          "ERROR CARGANDO CUENTAS PREMIUM: "
+                              "${snapshot.error}",
+                        );
+
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 20,
+                          ),
+                          child: Text(
+                            "Error cargando las cuentas bancarias:\n\n"
+                                "${snapshot.error}",
+                            textAlign: TextAlign.center,
+                          ),
+                        );
                       }
 
                       if (snapshot.hasError) {
