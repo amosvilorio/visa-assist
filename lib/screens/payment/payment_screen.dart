@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/settings_service.dart';
 import 'upload_receipt_screen.dart';
 import 'payment_pending_screen.dart';
+import '../../services/bank_service.dart';
+import '../../models/bank_account.dart';
 
 class PaymentScreen extends StatefulWidget {
   final String evaluationId;
@@ -23,6 +25,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   final FirebaseFirestore _db =
       FirebaseFirestore.instance;
+
+  final BankService _bankService =
+  BankService();
 
   bool loading = true;
 
@@ -159,6 +164,39 @@ class _PaymentScreenState extends State<PaymentScreen> {
           child: Text(text),
         ),
       ],
+    );
+  }
+
+  Widget _bankDataRow(
+      String titulo,
+      String valor,
+      ) {
+    return Padding(
+      padding: const EdgeInsets.only(
+        bottom: 14,
+      ),
+      child: Row(
+        children: [
+
+          Expanded(
+            flex: 2,
+            child: Text(
+              titulo,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+
+          Expanded(
+            flex: 3,
+            child: SelectableText(
+              valor,
+            ),
+          ),
+
+        ],
+      ),
     );
   }
 
@@ -408,109 +446,152 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   const SizedBox(height: 30),
 
                   //================================================
-                  // CUENTAS BANCARIAS
-                  //================================================
+// CUENTAS BANCARIAS
+//================================================
 
-                  StreamBuilder<
-                      QuerySnapshot<
-                          Map<String,
-                              dynamic>>>(
-                    stream: _db
-                        .collection("bank_accounts")
-                        .where(
-                      "active",
-                      isEqualTo: true,
-                    )
-                        .snapshots(),
+                  StreamBuilder<List<BankAccount>>(
+                    stream: _bankService.watchBanks(
+                      onlyEnabled: true,
+                    ),
 
-                    builder:
-                        (context, snapshot) {
-                      if (!snapshot
-                          .hasData) {
-                        return const SizedBox();
+                    builder: (context, snapshot) {
+
+                      if (snapshot.connectionState ==
+                          ConnectionState.waiting) {
+
+                        return const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(20),
+                            child: CircularProgressIndicator(),
+                          ),
+                        );
+
                       }
 
-                      final banks =
-                          snapshot.data!.docs;
+                      if (snapshot.hasError) {
+
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(
+                            vertical: 20,
+                          ),
+                          child: Text(
+                            "No se pudieron cargar las cuentas bancarias.",
+                            textAlign: TextAlign.center,
+                          ),
+                        );
+
+                      }
+
+                      if (!snapshot.hasData) {
+
+                        return const SizedBox();
+
+                      }
+
+                      final banks = snapshot.data!;
 
                       if (banks.isEmpty) {
-                        return const SizedBox();
+
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(
+                            vertical: 20,
+                          ),
+                          child: Text(
+                            "No hay cuentas bancarias disponibles en este momento.",
+                            textAlign: TextAlign.center,
+                          ),
+                        );
+
                       }
 
                       return Column(
                         crossAxisAlignment:
-                        CrossAxisAlignment
-                            .start,
+                        CrossAxisAlignment.start,
+
                         children: [
+
                           const Text(
                             "Cuentas disponibles para el pago",
                             style: TextStyle(
                               fontSize: 20,
-                              fontWeight:
-                              FontWeight.bold,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
 
-                          const SizedBox(
-                            height: 15,
-                          ),
+                          const SizedBox(height: 15),
 
                           ...banks.map(
                                 (bank) {
-                              final data =
-                              bank.data();
 
                               return Card(
-                                margin:
-                                const EdgeInsets
-                                    .only(
-                                  bottom: 12,
+                                margin: const EdgeInsets.only(
+                                  bottom: 18,
                                 ),
-                                child:
-                                Padding(
+                                elevation: 3,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                  BorderRadius.circular(18),
+                                ),
+
+                                child: Padding(
                                   padding:
-                                  const EdgeInsets
-                                      .all(
-                                    15,
-                                  ),
-                                  child:
-                                  Column(
+                                  const EdgeInsets.all(20),
+
+                                  child: Column(
                                     crossAxisAlignment:
-                                    CrossAxisAlignment
-                                        .start,
+                                    CrossAxisAlignment.start,
+
                                     children: [
-                                      Text(
-                                        data[
-                                        "bankName"],
-                                        style:
-                                        const TextStyle(
-                                          fontSize:
-                                          18,
-                                          fontWeight:
-                                          FontWeight
-                                              .bold,
-                                        ),
+
+                                      Row(
+                                        children: [
+
+                                          const Icon(
+                                            Icons.account_balance,
+                                            color: Colors.blue,
+                                          ),
+
+                                          const SizedBox(width: 10),
+
+                                          Expanded(
+                                            child: Text(
+                                              bank.bankName,
+                                              style:
+                                              const TextStyle(
+                                                fontSize: 20,
+                                                fontWeight:
+                                                FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+
+                                        ],
                                       ),
 
-                                      const SizedBox(
-                                        height: 8,
+                                      const Divider(
+                                        height: 30,
                                       ),
 
-                                      Text(
-                                        "Titular: ${data["accountHolder"]}",
+                                      _bankDataRow(
+                                        "Titular",
+                                        bank.accountHolder,
                                       ),
 
-                                      Text(
-                                        "Cuenta: ${data["accountNumber"]}",
+                                      _bankDataRow(
+                                        "Tipo",
+                                        bank.accountType,
                                       ),
 
-                                      Text(
-                                        "Tipo: ${data["accountType"]}",
+                                      _bankDataRow(
+                                        "Cuenta",
+                                        bank.accountNumber,
                                       ),
 
-                                      Text(
-                                        "Moneda: ${data["currency"]}",
+                                      _bankDataRow(
+                                        "Moneda",
+                                        bank.currency,
                                       ),
+
                                     ],
                                   ),
                                 ),
@@ -518,9 +599,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             },
                           ),
 
-                          const SizedBox(
-                            height: 25,
-                          ),
+                          const SizedBox(height: 25),
+
                         ],
                       );
                     },
