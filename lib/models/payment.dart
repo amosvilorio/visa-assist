@@ -9,7 +9,7 @@ class Payment {
   /// Expediente relacionado
   final String expedienteId;
 
-  /// evaluation | service | mrv
+  /// evaluation | service
   final String paymentType;
 
   /// Monto pagado
@@ -167,6 +167,4 @@ class Payment {
   bool get isService =>
       paymentType == "service";
 
-  bool get isMrv =>
-      paymentType == "mrv";
 }

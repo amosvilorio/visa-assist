@@ -11,6 +11,7 @@ import 'screens/welcome/welcome_screen.dart';
 import 'services/auth_service.dart';
 import 'services/notification_service.dart';
 import 'utils/app_theme.dart';
+import 'dart:async';
 
 /// ======================================================
 /// HANDLER DE NOTIFICACIONES EN SEGUNDO PLANO
@@ -62,8 +63,6 @@ Future<void> _firebaseMessagingBackgroundHandler(
     );
   }
 }
-
-
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -267,7 +266,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
-      stream: AuthService().authStateChanges(),
+      stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, authSnapshot) {
         // =================================================
         // AUTH COMPROBANDO SESIÓN
@@ -367,8 +366,14 @@ class _AuthWrapperState extends State<AuthWrapper> {
                 return const HomeAgentScreen();
 
               case 'client':
-              default:
                 return const PortalScreen();
+
+              default:
+                debugPrint(
+                  'ROL AÚN NO DISPONIBLE. ESPERANDO FIRESTORE...',
+                );
+
+                return const WelcomeScreen();
             }
           },
         );

@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import '../payment/service_payment_screen.dart';
 import '../../utils/app_colors.dart';
 import '../../models/expediente.dart';
+import '../../services/progress_service.dart';
 
-class SummaryScreen extends StatelessWidget {
+class SummaryScreen extends StatefulWidget {
 
   final Expediente expediente;
 
@@ -13,7 +14,20 @@ class SummaryScreen extends StatelessWidget {
   });
 
   @override
+  State<SummaryScreen> createState() =>
+      _SummaryScreenState();
+}
+
+class _SummaryScreenState extends State<SummaryScreen> {
+
+  final ProgressService _progressService =
+      ProgressService.instance;
+
+  bool _saving = false;
+
+  @override
   Widget build(BuildContext context) {
+    final expediente = widget.expediente;
     return Scaffold(
       backgroundColor: AppColors.background,
 
@@ -36,7 +50,7 @@ class SummaryScreen extends StatelessWidget {
           const SizedBox(height: 8),
 
           const Text(
-            "Resumen",
+            "Revisión del expediente",
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
@@ -351,22 +365,45 @@ class SummaryScreen extends StatelessWidget {
             height: 55,
             child: ElevatedButton.icon(
               icon: const Icon(Icons.check_circle),
-              label: const Text(
-                "CONTINUAR AL PAGO",
+              label: Text(
+                _saving
+                    ? "GUARDANDO..."
+                    : "CONTINUAR AL PAGO",
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ServicePaymentScreen(
-                      expedienteId: expediente.id,
+              onPressed: _saving
+                  ? null
+                  : () async {
+                setState(() {
+                  _saving = true;
+                });
+
+                try {
+                  await _progressService.saveStep(
+                    expedienteId: expediente.id,
+                    step: 17,
+                  );
+
+                  if (!mounted) return;
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ServicePaymentScreen(
+                        expedienteId: expediente.id,
+                      ),
                     ),
-                  ),
-                );
+                  );
+                } finally {
+                  if (mounted) {
+                    setState(() {
+                      _saving = false;
+                    });
+                  }
+                }
               },
             ),
           ),

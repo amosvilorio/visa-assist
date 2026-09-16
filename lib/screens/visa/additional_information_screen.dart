@@ -166,7 +166,7 @@ class _AdditionalInformationScreenState
 
     await _progressService.saveStep(
       expedienteId: _expediente!.id,
-      step: 17,
+      step: 16,
     );
 
     Navigator.push(
@@ -201,7 +201,7 @@ class _AdditionalInformationScreenState
             child: Column(
               children: [
                 const VisaStepHeader(
-                  currentStep: 17,
+                  currentStep: 16,
                   totalSteps: 18,
                   title: "Información Adicional",
                   description:

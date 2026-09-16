@@ -512,7 +512,6 @@ class NotificationService {
         "cas_credentials_updated",
         "cas_appointment_updated",
         "interview_appointment_updated",
-        "mrv_amount_response",
         "service_payment_approved",
         "service_payment_rejected",
       };

@@ -66,37 +66,19 @@ class Expediente {
 
   final String serviceStatus;
 
-
   final String paymentStatus;
-
 
   final String reviewStatus;
 
-
   final String ds160Status;
-
 
   final String casStatus;
 
-  final String mrvStatus;
-
-  final bool mrvAmountRequested;
-
-  final DateTime? mrvAmountRequestedAt;
-
-  final double? mrvAmountRequestedUsd;
-
-  final String mrvAmountRequestStatus;
-
-  final double? mrvDopAmount;
-
-  final DateTime? mrvAmountRespondedAt;
-
-
   final String interviewStatus;
 
-
   final String finalDecision;
+
+  final String interviewResultComment;
 
   //-----------------------------
 // Información CAS y Entrevista
@@ -200,23 +182,11 @@ class Expediente {
 
     this.casStatus = "Pendiente",
 
-    this.mrvStatus = "Pendiente",
-
-    this.mrvAmountRequested = false,
-
-    this.mrvAmountRequestedAt,
-
-    this.mrvAmountRequestedUsd,
-
-    this.mrvAmountRequestStatus = "none",
-
-    this.mrvDopAmount,
-
-    this.mrvAmountRespondedAt,
-
     this.interviewStatus = "Pendiente",
 
     this.finalDecision = "",
+
+    this.interviewResultComment = "",
 
     this.casUsername = "",
 
@@ -481,40 +451,6 @@ class Expediente {
       casStatus:
       json["casStatus"] ?? "Pendiente",
 
-      mrvStatus:
-      json["mrvStatus"] ?? "Pendiente",
-
-
-//---------------------------------------------
-// Solicitud de monto MRV
-//---------------------------------------------
-
-      mrvAmountRequested:
-      json["mrvAmountRequested"] ?? false,
-
-      mrvAmountRequestedAt:
-      json["mrvAmountRequestedAt"] != null
-          ? (json["mrvAmountRequestedAt"] as Timestamp).toDate()
-          : null,
-
-      mrvAmountRequestedUsd:
-      json["mrvAmountRequestedUsd"] != null
-          ? (json["mrvAmountRequestedUsd"] as num).toDouble()
-          : null,
-
-      mrvAmountRequestStatus:
-      json["mrvAmountRequestStatus"] ?? "none",
-
-      mrvDopAmount:
-      json["mrvDopAmount"] != null
-          ? (json["mrvDopAmount"] as num).toDouble()
-          : null,
-
-      mrvAmountRespondedAt:
-      json["mrvAmountRespondedAt"] != null
-          ? (json["mrvAmountRespondedAt"] as Timestamp).toDate()
-          : null,
-
 
       interviewStatus:
       json["interviewStatus"] ?? "Pendiente",
@@ -550,27 +486,20 @@ class Expediente {
       interviewLocation:
       json["interviewLocation"] ?? "",
 
-
-
       finalDecision:
       json["finalDecision"] ?? "",
 
-
+      interviewResultComment:
+      json["interviewResultComment"] ?? "",
 
       assignedAgentId:
       json["assignedAgentId"] ?? "",
 
-
-
       assignedAgentName:
       json["assignedAgentName"] ?? "",
 
-
-
       progress:
       (json["progress"] ?? 0).toDouble(),
-
-
 
       status:
       ExpedienteStatusExtension.fromString(
@@ -683,40 +612,6 @@ class Expediente {
       casStatus,
 
 
-      "mrvStatus":
-      mrvStatus,
-
-
-//---------------------------------------------
-// Solicitud de monto MRV
-//---------------------------------------------
-
-      "mrvAmountRequested":
-      mrvAmountRequested,
-
-      "mrvAmountRequestedAt":
-      mrvAmountRequestedAt != null
-          ? Timestamp.fromDate(
-        mrvAmountRequestedAt!,
-      )
-          : null,
-
-      "mrvAmountRequestedUsd":
-      mrvAmountRequestedUsd,
-
-      "mrvAmountRequestStatus":
-      mrvAmountRequestStatus,
-
-      "mrvDopAmount":
-      mrvDopAmount,
-
-      "mrvAmountRespondedAt":
-      mrvAmountRespondedAt != null
-          ? Timestamp.fromDate(
-        mrvAmountRespondedAt!,
-      )
-          : null,
-
 
       "interviewStatus":
       interviewStatus,
@@ -748,22 +643,20 @@ class Expediente {
       "interviewTime":
       interviewTime,
 
-
       "interviewLocation":
       interviewLocation,
-
 
       "finalDecision":
       finalDecision,
 
+      "interviewResultComment":
+      interviewResultComment,
 
       "assignedAgentId":
       assignedAgentId,
 
-
       "assignedAgentName":
       assignedAgentName,
-
 
       "progress":
       progress,
@@ -833,23 +726,11 @@ class Expediente {
 
     String? casStatus,
 
-    String? mrvStatus,
-
-    bool? mrvAmountRequested,
-
-    DateTime? mrvAmountRequestedAt,
-
-    double? mrvAmountRequestedUsd,
-
-    String? mrvAmountRequestStatus,
-
-    double? mrvDopAmount,
-
-    DateTime? mrvAmountRespondedAt,
-
     String? interviewStatus,
 
     String? finalDecision,
+
+    String? interviewResultComment,
 
     String? casUsername,
 
@@ -982,36 +863,6 @@ class Expediente {
       casStatus ??
           this.casStatus,
 
-      mrvStatus:
-      mrvStatus ??
-          this.mrvStatus,
-
-
-      mrvAmountRequested:
-      mrvAmountRequested ??
-          this.mrvAmountRequested,
-
-      mrvAmountRequestedAt:
-      mrvAmountRequestedAt ??
-          this.mrvAmountRequestedAt,
-
-      mrvAmountRequestedUsd:
-      mrvAmountRequestedUsd ??
-          this.mrvAmountRequestedUsd,
-
-      mrvAmountRequestStatus:
-      mrvAmountRequestStatus ??
-          this.mrvAmountRequestStatus,
-
-      mrvDopAmount:
-      mrvDopAmount ??
-          this.mrvDopAmount,
-
-      mrvAmountRespondedAt:
-      mrvAmountRespondedAt ??
-          this.mrvAmountRespondedAt,
-
-
       interviewStatus:
       interviewStatus ??
           this.interviewStatus,
@@ -1020,11 +871,9 @@ class Expediente {
       casUsername ??
           this.casUsername,
 
-
       casPassword:
       casPassword ??
           this.casPassword,
-
 
       casAppointmentDate:
       casAppointmentDate ??
@@ -1054,6 +903,10 @@ class Expediente {
       finalDecision:
       finalDecision ??
           this.finalDecision,
+
+      interviewResultComment:
+      interviewResultComment ??
+          this.interviewResultComment,
 
       assignedAgentId:
       assignedAgentId ??

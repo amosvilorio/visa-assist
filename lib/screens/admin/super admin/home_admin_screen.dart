@@ -10,6 +10,7 @@ import '../../support/admin_support_chats_screen.dart';
 import 'package:visa_app/screens/admin/evaluations/evaluations_screen.dart';
 import '../../notifications/notifications_screen.dart';
 import '../../../services/notification_service.dart';
+import '../../account/deletion_requests_screen.dart';
 
 
 class HomeAdminScreen extends StatelessWidget {
@@ -239,6 +240,23 @@ class HomeAdminScreen extends StatelessWidget {
             title: "Usuarios",
             subtitle: "Clientes registrados",
             onTap: () {},
+          ),
+
+          moduleCard(
+            context,
+            icon: Icons.delete_forever,
+            color: Colors.red,
+            title: "Solicitudes de eliminación",
+            subtitle: "Cuentas pendientes",
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) =>
+                  const DeletionRequestsScreen(),
+                ),
+              );
+            },
           ),
 
           moduleCard(

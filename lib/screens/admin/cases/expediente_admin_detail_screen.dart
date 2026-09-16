@@ -652,8 +652,10 @@ class _ExpedienteAdminDetailScreenState
                               final url =
                               Uri.parse(
                                 "https://www.google.com/maps/search/?api=1"
-                                    "&query=Embajada+de+los+Estados+Unidos"
-                                    "+Av+Republica+de+Colombia+57+Santo+Domingo",
+                                    "&query=Sambil+Santo+Domingo"
+                                    "+Av+John+F+Kennedy"
+                                    "+Santo+Domingo"
+                                    "+Republica+Dominicana",
                               );
 
                               if (await canLaunchUrl(
@@ -1106,6 +1108,202 @@ class _ExpedienteAdminDetailScreenState
   }
 
   //==================================================
+// REGISTRAR RESULTADO DE ENTREVISTA
+//==================================================
+
+  Future<void> _registrarResultadoEntrevista(
+      BuildContext context) async {
+
+    String resultadoSeleccionado =
+    widget.expediente.finalDecision.isEmpty
+        ? "Aprobada"
+        : widget.expediente.finalDecision;
+
+    final comentarioController =
+    TextEditingController();
+
+    final resultado = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+
+        bool guardando = false;
+
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+
+            return AlertDialog(
+              title: const Text(
+                "Registrar resultado de entrevista",
+              ),
+
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+
+                    DropdownButtonFormField<String>(
+                      value: resultadoSeleccionado,
+                      decoration: const InputDecoration(
+                        labelText: "Resultado",
+                        prefixIcon:
+                        Icon(Icons.fact_check),
+                      ),
+                      items: const [
+                        DropdownMenuItem(
+                          value: "Aprobada",
+                          child: Text("Aprobada"),
+                        ),
+                        DropdownMenuItem(
+                          value: "Denegada",
+                          child: Text("Denegada"),
+                        ),
+                        DropdownMenuItem(
+                          value: "Proceso administrativo",
+                          child: Text(
+                            "Proceso administrativo",
+                          ),
+                        ),
+                      ],
+                      onChanged: guardando
+                          ? null
+                          : (value) {
+                        if (value == null) return;
+
+                        setDialogState(() {
+                          resultadoSeleccionado =
+                              value;
+                        });
+                      },
+                    ),
+
+                    const SizedBox(height: 18),
+
+                    TextField(
+                      controller: comentarioController,
+                      maxLines: 4,
+                      decoration: const InputDecoration(
+                        labelText: "Comentario",
+                        hintText:
+                        "Agrega una observación sobre el resultado...",
+                        prefixIcon:
+                        Icon(Icons.comment),
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              actions: [
+
+                TextButton(
+                  onPressed: guardando
+                      ? null
+                      : () {
+                    Navigator.pop(
+                      dialogContext,
+                      false,
+                    );
+                  },
+                  child: const Text(
+                    "CANCELAR",
+                  ),
+                ),
+
+                ElevatedButton.icon(
+                  icon: guardando
+                      ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child:
+                    CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                      : const Icon(Icons.save),
+
+                  label: Text(
+                    guardando
+                        ? "GUARDANDO..."
+                        : "GUARDAR",
+                  ),
+
+                  onPressed: guardando
+                      ? null
+                      : () async {
+
+                    setDialogState(() {
+                      guardando = true;
+                    });
+
+                    try {
+
+                      await _service
+                          .saveInterviewResult(
+                        expedienteId:
+                        widget.expediente.id,
+                        result:
+                        resultadoSeleccionado,
+                        comment:
+                        comentarioController
+                            .text
+                            .trim(),
+                      );
+
+                      if (!dialogContext.mounted) {
+                        return;
+                      }
+
+                      Navigator.pop(
+                        dialogContext,
+                        true,
+                      );
+
+                    } catch (e) {
+
+                      setDialogState(() {
+                        guardando = false;
+                      });
+
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            "Error al guardar: $e",
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    comentarioController.dispose();
+
+    if (resultado == true && mounted) {
+
+      setState(() {});
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Resultado de entrevista registrado correctamente.",
+          ),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  }
+
+  //==================================================
   // BUILD
   //==================================================
 
@@ -1217,12 +1415,23 @@ class _ExpedienteAdminDetailScreenState
               icon: Icons.fact_check,
               title: "Resultado de la entrevista",
               children: [
+
                 _item(
                   "Resultado",
                   expediente.finalDecision.isEmpty
                       ? "Pendiente"
                       : expediente.finalDecision,
                 ),
+
+                if (expediente.interviewResultComment
+                    .isNotEmpty) ...[
+                  const SizedBox(height: 5),
+
+                  _item(
+                    "Comentario",
+                    expediente.interviewResultComment,
+                  ),
+                ],
               ],
             ),
 

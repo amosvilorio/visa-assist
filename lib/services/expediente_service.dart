@@ -574,74 +574,6 @@ class ExpedienteService {
   }
 
   //--------------------------------------------------
-  // ACTUALIZAR ESTADO DEL MRV
-  //--------------------------------------------------
-
-  Future<void> updateMrvStatus({
-    required String expedienteId,
-    required String status,
-  }) async {
-    await _collection.doc(expedienteId).update({
-      "mrvStatus": status,
-      "updatedAt": Timestamp.now(),
-    });
-  }
-
-  //--------------------------------------------------
-// SOLICITAR MONTO MRV EN PESOS DOMINICANOS
-//--------------------------------------------------
-
-  Future<void> requestMrvDopAmount({
-    required String expedienteId,
-    required double mrvUsdAmount,
-  }) async {
-    await _collection.doc(expedienteId).update({
-      "mrvAmountRequested": true,
-      "mrvAmountRequestedAt": Timestamp.now(),
-      "mrvAmountRequestedUsd": mrvUsdAmount,
-      "mrvAmountRequestStatus": "pending",
-      "updatedAt": Timestamp.now(),
-    });
-  }
-
-  //--------------------------------------------------
-// RESPONDER MONTO MRV EN PESOS DOMINICANOS
-//--------------------------------------------------
-
-  Future<void> setMrvDopAmount({
-    required String expedienteId,
-    required double dopAmount,
-  }) async {
-    await _collection.doc(expedienteId).update({
-      "mrvDopAmount": dopAmount,
-      "mrvAmountRespondedAt": Timestamp.now(),
-      "mrvAmountRequestStatus": "responded",
-      "updatedAt": Timestamp.now(),
-    });
-  }
-
-  //==================================================
-// SOLICITUDES MRV PENDIENTES DE MONTO
-//==================================================
-
-  Stream<List<Expediente>> pendingMrvAmountRequests() {
-    return _collection
-        .where(
-      "mrvAmountRequestStatus",
-      isEqualTo: "pending",
-    )
-        .snapshots()
-        .map((snapshot) {
-      return snapshot.docs.map((doc) {
-        return Expediente.fromFirestore(
-          doc.id,
-          doc.data() as Map<String, dynamic>,
-        );
-      }).toList();
-    });
-  }
-
-  //--------------------------------------------------
   // ACTUALIZAR RESULTADO FINAL
   //--------------------------------------------------
 
@@ -816,11 +748,59 @@ class ExpedienteService {
     required String time,
     required String location,
   }) async {
-    await _collection.doc(expedienteId).update({
-      "casAppointmentDate": date,
-      "casAppointmentTime": time,
-      "casLocation": location,
-      "updatedAt": Timestamp.now(),
+
+    final docRef =
+    _collection.doc(expedienteId);
+
+    final snapshot =
+    await docRef.get();
+
+    if (!snapshot.exists) {
+      throw Exception(
+        "El expediente no existe.",
+      );
+    }
+
+    final data =
+    snapshot.data() as Map<String, dynamic>;
+
+    //==================================================
+    // RECUPERAR INFORMACIÓN VISA EXISTENTE
+    //==================================================
+
+    final visaProcessData =
+    data["visaProcessInformation"] != null
+        ? Map<String, dynamic>.from(
+      data["visaProcessInformation"],
+    )
+        : <String, dynamic>{};
+
+    //==================================================
+    // ACTUALIZAR CITA CAS
+    //==================================================
+
+    visaProcessData["casDate"] = date;
+    visaProcessData["casTime"] = time;
+
+    //==================================================
+    // GUARDAR EN AMBOS NIVELES
+    //==================================================
+
+    await docRef.update({
+      "visaProcessInformation":
+      visaProcessData,
+
+      "casAppointmentDate":
+      date,
+
+      "casAppointmentTime":
+      time,
+
+      "casLocation":
+      location,
+
+      "updatedAt":
+      Timestamp.now(),
     });
   }
 

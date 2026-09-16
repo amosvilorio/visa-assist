@@ -59,6 +59,19 @@ class _ServiceUploadReceiptScreenState
 
   bool uploading = false;
 
+  String _formatMoney(double value) {
+    final parts = value.toStringAsFixed(2).split('.');
+    final integerPart = parts[0];
+
+    final formattedInteger =
+    integerPart.replaceAllMapped(
+      RegExp(r'\B(?=(\d{3})+(?!\d))'),
+          (match) => ',',
+    );
+
+    return "$formattedInteger.${parts[1]}";
+  }
+
   Future<void> pickImage() async {
 
     final file =
@@ -174,7 +187,7 @@ class _ServiceUploadReceiptScreenState
 
                       dato(
                         "Monto",
-                        "${widget.currency} ${widget.amount}",
+                        "${widget.currency} ${_formatMoney(widget.amount)}",
                       ),
 
                     ],

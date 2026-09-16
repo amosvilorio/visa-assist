@@ -44,9 +44,6 @@ class NotificationsScreen extends StatelessWidget {
       case "premium_evaluation_received":
         return Icons.star;
 
-      case "mrv_payment_received":
-        return Icons.account_balance;
-
       case "ds160_uploaded":
         return Icons.description;
 

@@ -58,37 +58,18 @@ class SettingsService {
 
   }
 
-
-
-  Future<double> getMrvPrice() async {
-
-    final settings =
-    await getSettings();
-
-
-    return (settings["mrvPrice"] ?? 0)
-        .toDouble();
-
-  }
-
-
-
   //==========================================
   // ESTADOS DE SERVICIOS
   //==========================================
-
 
   Future<bool> isEvaluationEnabled() async {
 
     final settings =
     await getSettings();
 
-
     return settings["evaluationEnabled"] ?? true;
 
   }
-
-
 
   Future<bool> isServiceEnabled() async {
 
@@ -100,42 +81,23 @@ class SettingsService {
 
   }
 
-
-
-  Future<bool> isMrvEnabled() async {
-
-    final settings =
-    await getSettings();
-
-
-    return settings["mrvEnabled"] ?? true;
-
-  }
-
-
-
   //==========================================
   // MONEDA
   //==========================================
-
 
   Future<String> getCurrencySymbol() async {
 
     final settings =
     await getSettings();
 
-
     return settings["currencySymbol"] ?? "RD\$";
 
   }
-
-
 
   Future<String> getCurrency() async {
 
     final settings =
     await getSettings();
-
 
     return settings["currency"] ?? "DOP";
 

@@ -553,9 +553,7 @@ class _ExpedienteDetailScreenState
 
     ),
 
-
     const SizedBox(width:10),
-
 
     Expanded(
 
@@ -568,29 +566,19 @@ class _ExpedienteDetailScreenState
         : "Agente: ${expediente.assignedAgentName}",
 
     ),
-
     ),
-
     ],
-
     ),
-
-
     ],
-
     ),
-
     ),
-
     ),
-
 
     const SizedBox(height:25),
 
             //------------------------------------
             // TU PRÓXIMO PASO
             //------------------------------------
-
 
             const Text(
 
@@ -606,65 +594,49 @@ class _ExpedienteDetailScreenState
 
             ),
 
-
             const SizedBox(height:15),
-
-
 
             _buildNextStepCard(),
 
-
-
             const SizedBox(height:20),
 
+//------------------------------------
+// SEGUIMIENTO DEL EXPEDIENTE
+//------------------------------------
 
-
-            //------------------------------------
-            // SEGUIMIENTO DEL EXPEDIENTE
-            //------------------------------------
-
-
-            _buildNavigationCard(
-              context,
-              (expediente.currentStep >= 18 ||
-                  (expediente.currentStep >= 17 &&
-                      expediente.serviceStatus == "contratado"))
-                  ? Icons.check_circle
-                  : Icons.edit_document,
-              (expediente.currentStep >= 18 ||
-                  (expediente.currentStep >= 17 &&
-                      expediente.serviceStatus == "contratado"))
-                  ? "Expediente completado ✓"
-                  : "Expediente en proceso",
-              (expediente.currentStep >= 18 ||
-                  (expediente.currentStep >= 17 &&
-                      expediente.serviceStatus == "contratado"))
-                  ? "La recopilación de información ha finalizado. "
-                  "Puedes consultar el seguimiento cuando lo necesites."
-                  : "Continúa completando la información de tu expediente "
-                  "desde el punto donde lo dejaste.",
-                  () {
-                if (expediente.currentStep >= 18 ||
-                    (expediente.currentStep >= 17 &&
-                        expediente.serviceStatus == "contratado")) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ExpedienteTrackingScreen(
-                        expediente: expediente,
+            if (expediente.serviceStatus != "contratado") ...[
+              _buildNavigationCard(
+                context,
+                expediente.currentStep >= 18
+                    ? Icons.check_circle
+                    : Icons.edit_document,
+                expediente.currentStep >= 18
+                    ? "Expediente completado ✓"
+                    : "Expediente en proceso",
+                expediente.currentStep >= 18
+                    ? "La recopilación de información ha finalizado. "
+                    "Puedes consultar el seguimiento cuando lo necesites."
+                    : "Continúa completando la información de tu expediente "
+                    "desde el punto donde lo dejaste.",
+                    () {
+                  if (expediente.currentStep >= 18) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ExpedienteTrackingScreen(
+                          expediente: expediente,
+                        ),
                       ),
-                    ),
-                  );
-                } else {
-                  _continueExpediente(context);
-                }
-              },
-              completed: expediente.currentStep >= 18 ||
-                  (expediente.currentStep >= 17 &&
-                      expediente.serviceStatus == "contratado"),
-            ),
+                    );
+                  } else {
+                    _continueExpediente(context);
+                  }
+                },
+                completed: expediente.currentStep >= 18,
+              ),
 
-            const SizedBox(height:15),
+              const SizedBox(height: 15),
+            ],
 
             //------------------------------------
             // PROCESO VISA ASSIST
@@ -675,7 +647,7 @@ class _ExpedienteDetailScreenState
               Icons.flight_takeoff,
               "Proceso Visa Assist",
               "Tu proceso continúa aquí. Consulta el estado de tu "
-                  "DS-160, pago MRV, cita CAS y entrevista consular.",
+                  "DS-160, perfil CAS, cita CAS y entrevista consular.",
                   () {
                 Navigator.push(
                   context,
@@ -769,10 +741,36 @@ class _ExpedienteDetailScreenState
             ],
 
 
+            const SizedBox(height: 15),
 
-            const SizedBox(height:15),
+            //==================================================
+            // IR AL HOME
+            //==================================================
 
+            SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: OutlinedButton.icon(
+                icon: const Icon(
+                  Icons.home_outlined,
+                  size: 25,
+                ),
+                label: const Text(
+                  "IR AL HOME",
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.of(context).popUntil(
+                        (route) => route.isFirst,
+                  );
+                },
+              ),
+            ),
 
+            const SizedBox(height: 15),
 
           ],
 
@@ -781,6 +779,50 @@ class _ExpedienteDetailScreenState
     );
 
   }
+
+  //------------------------------------------------
+  // VERIFICAR SI YA PASÓ LA FECHA DEL CAS
+  //------------------------------------------------
+
+  bool _casYaPaso() {
+    final fechaCas =
+    _expedienteActual.casAppointmentDate.trim();
+
+    if (fechaCas.isEmpty) {
+      return false;
+    }
+
+    try {
+      final partes = fechaCas.split("/");
+
+      if (partes.length != 3) {
+        return false;
+      }
+
+      final dia = int.parse(partes[0]);
+      final mes = int.parse(partes[1]);
+      final anio = int.parse(partes[2]);
+
+      final fechaCasDate = DateTime(
+        anio,
+        mes,
+        dia,
+      );
+
+      final hoy = DateTime.now();
+
+      final hoySinHora = DateTime(
+        hoy.year,
+        hoy.month,
+        hoy.day,
+      );
+
+      return hoySinHora.isAfter(fechaCasDate);
+    } catch (_) {
+      return false;
+    }
+  }
+
 
   //------------------------------------------------
   // PRÓXIMO PASO
@@ -877,24 +919,6 @@ class _ExpedienteDetailScreenState
     }
 
     //==================================================
-    // PAGO MRV
-    //==================================================
-
-    else if (expediente.mrvStatus != "Pagado" &&
-        expediente.mrvStatus != "pago mrv confirmado" &&
-        expediente.mrvStatus != "Pago MRV confirmado") {
-
-      title = "Pago MRV";
-
-      description =
-      "El pago de la tasa consular debe realizarse antes de continuar.";
-
-      icon = Icons.account_balance;
-      color = Colors.deepPurple;
-
-    }
-
-    //==================================================
     // PERFIL CAS
     //==================================================
 
@@ -927,19 +951,32 @@ class _ExpedienteDetailScreenState
     }
 
     //==================================================
-    // ENTREVISTA CONSULAR
+    // CITA CAS / ENTREVISTA CONSULAR
     //==================================================
+
+    else if (!_casYaPaso() && !entrevistaRealizada) {
+
+      title = "Cita CAS";
+
+      description =
+      "Debes asistir al CAS para la toma de huellas "
+          "y fotografía.";
+
+      icon = Icons.fingerprint;
+      color = Colors.green;
+
+    }
 
     else if (!entrevistaRealizada) {
 
       title = "Entrevista consular";
 
       description =
-      "Debes asistir a tu entrevista en la embajada.";
+      "Debes asistir a tu entrevista consular en la "
+          "Embajada de los Estados Unidos.";
 
       icon = Icons.groups;
       color = AppColors.accentRed;
-
     }
 
     //==================================================
@@ -1110,9 +1147,10 @@ class _ExpedienteDetailScreenState
 
       }
 
-      if (expediente.mrvStatus != "Pagado") {
+      if (!_casYaPaso() &&
+          expediente.interviewStatus != "Realizada") {
 
-        return "Pago MRV";
+        return "Cita CAS";
 
       }
 

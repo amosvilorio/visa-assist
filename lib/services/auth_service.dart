@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'notification_service.dart';
-
+import 'package:flutter/services.dart';
 import '../models/app_user.dart';
 
 class AuthService {
@@ -349,12 +349,25 @@ class AuthService {
       );
 
       return e.message;
+    } on PlatformException catch (e) {
+      print(
+        "ERROR LOGIN GOOGLE: ${e.code} - ${e.message}",
+      );
+
+      if (e.code == "network_error") {
+        return "No pudimos iniciar sesión con Google. "
+            "Verifica tu conexión a Internet e inténtalo nuevamente.";
+      }
+
+      return "No pudimos iniciar sesión con Google. "
+          "Inténtalo nuevamente.";
     } catch (e) {
       print(
         "ERROR LOGIN GOOGLE: $e",
       );
 
-      return e.toString();
+      return "No pudimos iniciar sesión con Google. "
+          "Inténtalo nuevamente.";
     }
   }
 
@@ -726,20 +739,10 @@ class AuthService {
     );
 
     //==================================================
-    // ELIMINAR TOKEN FCM DE LA CUENTA ACTUAL
+    // CERRAR SESIÓN FIREBASE
     //==================================================
 
-    try {
-      await NotificationService().clearToken();
-
-      print(
-        "FCM TOKEN ELIMINADO ANTES DEL LOGOUT.",
-      );
-    } catch (e) {
-      print(
-        "ERROR ELIMINANDO FCM TOKEN: $e",
-      );
-    }
+    await _auth.signOut();
 
     //==================================================
     // CERRAR SESIÓN DE GOOGLE
@@ -754,10 +757,20 @@ class AuthService {
     }
 
     //==================================================
-    // CERRAR SESIÓN FIREBASE
+    // ELIMINAR TOKEN FCM DE LA CUENTA ANTERIOR
     //==================================================
 
-    await _auth.signOut();
+    try {
+      await NotificationService().clearToken();
+
+      print(
+        "FCM TOKEN ELIMINADO DESPUÉS DEL LOGOUT.",
+      );
+    } catch (e) {
+      print(
+        "ERROR ELIMINANDO FCM TOKEN: $e",
+      );
+    }
 
     //==================================================
     // ELIMINAR ROL LOCAL
@@ -793,6 +806,6 @@ class AuthService {
   //==================================================
 
   Stream<User?> authStateChanges() {
-    return _auth.authStateChanges();
+    return _auth.userChanges();
   }
 }

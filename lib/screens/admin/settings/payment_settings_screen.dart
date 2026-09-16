@@ -32,10 +32,8 @@ class _PaymentSettingsScreenState
   final TextEditingController servicePriceController =
   TextEditingController();
 
-
-  final TextEditingController mrvPriceController =
+  final TextEditingController exchangeRateController =
   TextEditingController();
-
 
   final TextEditingController symbolController =
   TextEditingController();
@@ -54,9 +52,6 @@ class _PaymentSettingsScreenState
 
 
   bool serviceEnabled = true;
-
-
-  bool mrvEnabled = true;
 
 
   bool loading = true;
@@ -84,54 +79,32 @@ class _PaymentSettingsScreenState
 
   Future<void> loadSettings() async {
 
-
     final settings =
     await _settingsService.getSettings();
-
-
 
     evaluationPriceController.text =
         (settings["evaluationPrice"] ?? 0)
             .toString();
 
-
-
     servicePriceController.text =
         (settings["servicePrice"] ?? 0)
             .toString();
 
-
-
-    mrvPriceController.text =
-        (settings["mrvPrice"] ?? 0)
+    exchangeRateController.text =
+        (settings["usdToDopRate"] ?? 0)
             .toString();
-
-
 
     symbolController.text =
         settings["currencySymbol"] ?? "RD\$";
 
-
-
     currency =
         settings["currency"] ?? "DOP";
-
-
 
     evaluationEnabled =
         settings["evaluationEnabled"] ?? true;
 
-
-
     serviceEnabled =
         settings["serviceEnabled"] ?? true;
-
-
-
-    mrvEnabled =
-        settings["mrvEnabled"] ?? true;
-
-
 
     if (!mounted) return;
 
@@ -145,31 +118,20 @@ class _PaymentSettingsScreenState
 
   }
 
-
-
-
   @override
   void dispose() {
 
-
     evaluationPriceController.dispose();
-
 
     servicePriceController.dispose();
 
-
-    mrvPriceController.dispose();
-
+    exchangeRateController.dispose();
 
     symbolController.dispose();
-
 
     super.dispose();
 
   }
-
-
-
 
   Widget priceField({
 
@@ -178,7 +140,6 @@ class _PaymentSettingsScreenState
     required TextEditingController controller,
 
   }) {
-
 
     return TextField(
 
@@ -433,18 +394,24 @@ class _PaymentSettingsScreenState
 
 
                       priceField(
-
                         label:
                         "Precio del expediente",
 
                         controller:
                         servicePriceController,
-
                       ),
-
 
                       const SizedBox(height: 15),
 
+                      priceField(
+                        label:
+                        "Tasa USD → DOP",
+
+                        controller:
+                        exchangeRateController,
+                      ),
+
+                      const SizedBox(height: 15),
 
                       SwitchListTile(
 
@@ -483,96 +450,6 @@ class _PaymentSettingsScreenState
 
 
               const SizedBox(height: 20),
-
-
-
-              //==============================
-              // MRV
-              //==============================
-
-
-              Card(
-
-                child: Padding(
-
-                  padding:
-                  const EdgeInsets.all(18),
-
-
-                  child: Column(
-
-                    crossAxisAlignment:
-                    CrossAxisAlignment.start,
-
-                    children: [
-
-                      const Text(
-                        "Tarifa MRV - Visa de EE.UU.",
-
-                        style:
-                        TextStyle(
-
-                          fontSize: 20,
-
-                          fontWeight:
-                          FontWeight.bold,
-
-                        ),
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      priceField(
-                        label:
-                        "Tarifa MRV (USD)",
-
-                        controller:
-                        mrvPriceController,
-                      ),
-
-
-                      const SizedBox(height: 15),
-
-
-                      SwitchListTile(
-
-                        value:
-                        mrvEnabled,
-
-
-                        title:
-                        const Text(
-                          "MRV activo",
-                        ),
-
-
-                        onChanged:
-                            (value) {
-
-                          setState(() {
-
-                            mrvEnabled =
-                                value;
-
-                          });
-
-                        },
-
-                      ),
-
-                    ],
-
-                  ),
-
-                ),
-
-              ),
-
-
-
-              const SizedBox(height: 20),
-
-
 
               //==============================
               // MONEDA
@@ -742,8 +619,6 @@ class _PaymentSettingsScreenState
 
                       ) ?? 0,
 
-
-
                       "servicePrice":
 
                       double.tryParse(
@@ -754,39 +629,21 @@ class _PaymentSettingsScreenState
 
                       ) ?? 0,
 
-
-
-                      "mrvPrice":
-
+                      "usdToDopRate":
                       double.tryParse(
-
-                        mrvPriceController
+                        exchangeRateController
                             .text
                             .trim(),
-
                       ) ?? 0,
-
-
 
                       "evaluationEnabled":
                       evaluationEnabled,
 
-
-
                       "serviceEnabled":
                       serviceEnabled,
 
-
-
-                      "mrvEnabled":
-                      mrvEnabled,
-
-
-
                       "currency":
                       currency,
-
-
 
                       "currencySymbol":
                       symbolController

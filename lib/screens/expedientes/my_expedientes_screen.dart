@@ -297,8 +297,8 @@ class _MyExpedientesScreenState
                                         ),
 
                                         child: Text(
-                                          _getCurrentStage(
-                                            expediente.currentStep,
+                                          _getCurrentStageForExpediente(
+                                            expediente,
                                           ),
 
                                           style: const TextStyle(
@@ -563,6 +563,80 @@ class _MyExpedientesScreenState
     );
 
   }
+
+  //==================================================
+  // ETAPA ACTUAL DEL EXPEDIENTE
+  //==================================================
+
+  String _getCurrentStageForExpediente(
+      Expediente expediente,
+      ) {
+
+    final casDate =
+    expediente.casAppointmentDate.trim();
+
+    if (casDate.isNotEmpty &&
+        casDate.toLowerCase() != "pendiente") {
+
+      DateTime? fechaCas =
+      DateTime.tryParse(casDate);
+
+      if (fechaCas == null) {
+
+        final partes = casDate.split(
+          RegExp(r'[/\-]'),
+        );
+
+        if (partes.length == 3) {
+
+          final dia = int.tryParse(partes[0]);
+          final mes = int.tryParse(partes[1]);
+          final anio = int.tryParse(partes[2]);
+
+          if (dia != null &&
+              mes != null &&
+              anio != null) {
+
+            fechaCas = DateTime(
+              anio,
+              mes,
+              dia,
+            );
+          }
+        }
+      }
+
+      if (fechaCas != null) {
+
+        final ahora = DateTime.now();
+
+        final hoy = DateTime(
+          ahora.year,
+          ahora.month,
+          ahora.day,
+        );
+
+        final citaCas = DateTime(
+          fechaCas.year,
+          fechaCas.month,
+          fechaCas.day,
+        );
+
+        // Antes o durante el día del CAS
+        if (!hoy.isAfter(citaCas)) {
+          return "Cita CAS";
+        }
+
+        // Desde el día siguiente al CAS
+        return "Entrevista consular";
+      }
+    }
+
+    return _getCurrentStage(
+      expediente.currentStep,
+    );
+  }
+
 
   String _getCurrentStage(int step) {
 

@@ -92,8 +92,12 @@ class PaymentService {
       if (status == "pending" ||
           status == "approved") {
 
+        final tipoPago = paymentType == "service"
+            ? "este servicio Visa Assist"
+            : "esta evaluación";
+
         throw Exception(
-          "Ya existe un pago ${status == "approved" ? "aprobado" : "pendiente"} para esta evaluación. ID: ${doc.id}",
+          "Ya existe un pago ${status == "approved" ? "aprobado" : "pendiente"} para $tipoPago. ID: ${doc.id}",
         );
 
       }
@@ -170,14 +174,6 @@ class PaymentService {
 
     }
 
-    if (paymentType == "mrv") {
-
-      await _expedienteService.updateMrvStatus(
-        expedienteId: expedienteId,
-        status: "En revisión",
-      );
-
-    }
     return paymentDoc.id;
   }
 
@@ -422,35 +418,6 @@ class PaymentService {
       );
     }
 
-    if (payment.paymentType == "mrv") {
-
-      await _expedienteService.updateMrvStatus(
-        expedienteId: currentPayment.expedienteId,
-        status: "pago mrv confirmado",
-      );
-
-      //==================================================
-      // NOTIFICAR CLIENTE - PAGO MRV APROBADO
-      //==================================================
-
-      await _notificationService.createNotification(
-        userId: currentPayment.userId,
-        title: "Pago de la tarifa de visa aprobado",
-        message:
-        "Tu pago de la tarifa de visa ha sido aprobado. "
-            "Visa Assist continuará con la gestión de tu proceso.",
-        type: "mrv_payment_approved",
-        expedienteId: currentPayment.expedienteId,
-        data: {
-          "paymentId": currentPayment.id,
-          "paymentType": currentPayment.paymentType,
-          "amount": currentPayment.amount,
-          "currency": currentPayment.currency,
-        },
-      );
-
-    }
-
     if (payment.paymentType == "evaluation") {
 
       await _evaluationService.approvePayment(
@@ -520,29 +487,6 @@ class PaymentService {
       await _expedienteService.updateServiceStatus(
         expedienteId: payment.expedienteId,
         serviceStatus: "pendiente",
-      );
-    }
-
-    if (payment != null &&
-        payment.paymentType == "mrv") {
-
-      await _expedienteService.updateMrvStatus(
-        expedienteId: payment.expedienteId,
-        status: "Pendiente",
-      );
-
-      await _notificationService.createNotification(
-        userId: payment.userId,
-        title: "Pago del servicio rechazado",
-        message:
-        "Tu comprobante de pago del servicio Visa Assist fue rechazado. Revisa el motivo y vuelve a enviar un comprobante válido.",
-        type: "service_payment_rejected",
-        expedienteId: payment.expedienteId,
-        data: {
-          "paymentId": payment.id,
-          "paymentType": payment.paymentType,
-          "adminComment": comment,
-        },
       );
     }
 

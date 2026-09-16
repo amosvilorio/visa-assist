@@ -3,7 +3,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../services/expediente_service.dart';
 import '../../models/expediente.dart';
 import '../../utils/app_colors.dart';
-import 'mrv_payment_screen.dart';
 import 'dart:async';
 
 class VisaAssistProcessScreen extends StatefulWidget {
@@ -61,7 +60,7 @@ class _VisaAssistProcessScreenState
 
   bool _canRegisterInterviewResult() {
     final interviewDate =
-        widget.expediente.visaProcessInformation?.interviewDate;
+        _currentExpediente.visaProcessInformation?.interviewDate;
 
     if (interviewDate == null ||
         interviewDate.trim().isEmpty ||
@@ -301,6 +300,69 @@ class _VisaAssistProcessScreenState
   }
 
   // ============================================================
+  // VERIFICAR SI YA PASÓ LA FECHA DEL CAS
+  // ============================================================
+
+  bool _casYaPaso() {
+    final fechaCas =
+    _currentExpediente.casAppointmentDate.trim();
+
+    if (fechaCas.isEmpty ||
+        fechaCas.toLowerCase() == "pendiente") {
+      return false;
+    }
+
+    DateTime? fechaCita;
+
+    // Formato yyyy-MM-dd
+    fechaCita = DateTime.tryParse(fechaCas);
+
+    // Formato dd/MM/yyyy o dd-MM-yyyy
+    if (fechaCita == null) {
+      final partes = fechaCas.split(
+        RegExp(r'[/\-]'),
+      );
+
+      if (partes.length == 3) {
+        final dia = int.tryParse(partes[0]);
+        final mes = int.tryParse(partes[1]);
+        final anio = int.tryParse(partes[2]);
+
+        if (dia != null &&
+            mes != null &&
+            anio != null) {
+          fechaCita = DateTime(
+            anio,
+            mes,
+            dia,
+          );
+        }
+      }
+    }
+
+    if (fechaCita == null) {
+      return false;
+    }
+
+    final ahora = DateTime.now();
+
+    final hoy = DateTime(
+      ahora.year,
+      ahora.month,
+      ahora.day,
+    );
+
+    final cita = DateTime(
+      fechaCita.year,
+      fechaCita.month,
+      fechaCita.day,
+    );
+
+    return hoy.isAfter(cita);
+  }
+
+
+  // ============================================================
   // UBICACIONES FIJAS
   // ============================================================
 
@@ -384,6 +446,9 @@ class _VisaAssistProcessScreenState
     final expediente = _currentExpediente;
     final visaInfo = expediente.visaProcessInformation;
 
+    final ds160Disponible =
+        visaInfo?.ds160PdfUrl?.isNotEmpty ?? false;
+
     return Scaffold(
       backgroundColor: AppColors.background,
 
@@ -408,6 +473,72 @@ class _VisaAssistProcessScreenState
             // ==================================================
             // DS-160
             // ==================================================
+
+            // ==================================================
+// AVISO DE COMUNICACIÓN CON EL CLIENTE
+// ==================================================
+
+            if (!ds160Disponible)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(18),
+                margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: Colors.blue.shade200,
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.chat_bubble_outline,
+                    color: Colors.blue.shade700,
+                    size: 30,
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Mantente atento a nuestros mensajes",
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          "Durante la preparación de tu solicitud, "
+                              "nuestro equipo podría solicitarte información "
+                              "o documentos adicionales cuando sean necesarios. "
+                              "Podemos contactarte por WhatsApp o mediante "
+                              "la mensajería de la aplicación.",
+                          style: const TextStyle(
+                            fontSize: 14,
+                            height: 1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          "📌 Revisa tus mensajes periódicamente para evitar "
+                              "retrasos en tu proceso.",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.blue.shade800,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
             _sectionCard(
               title: "📄 Formulario DS-160",
@@ -449,128 +580,6 @@ class _VisaAssistProcessScreenState
             const SizedBox(height: 20),
 
             // ==================================================
-// PAGO MRV
-// ==================================================
-
-            _sectionCard(
-              title: "💳 Pago de la tarifa de visa",
-              children: [
-
-                _item(
-                  "Estado",
-                  expediente.mrvStatus,
-                ),
-
-                const SizedBox(height: 8),
-
-                if (expediente.mrvStatus != "pago mrv confirmado") ...[
-
-                  const Text(
-                    "Visa Assist gestionará el pago de la tarifa "
-                        "oficial correspondiente a tu solicitud.",
-                    style: TextStyle(
-                      height: 1.5,
-                    ),
-                  ),
-
-                  const SizedBox(height: 15),
-
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      icon: const Icon(
-                        Icons.account_balance,
-                      ),
-                      label: const Text(
-                        "GESTIONAR PAGO MRV",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => MrvPaymentScreen(
-                              expediente: expediente,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-
-                  const SizedBox(height: 15),
-
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.shade50,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: const Text(
-                      "La tarifa oficial no está incluida en el costo "
-                          "del servicio Visa Assist. Nuestro equipo te "
-                          "indicará el monto correspondiente y gestionará "
-                          "el pago oficial una vez confirmada la recepción "
-                          "de los fondos.",
-                      style: TextStyle(
-                        height: 1.5,
-                      ),
-                    ),
-                  ),
-                ],
-
-                if (expediente.mrvStatus == "pago mrv confirmado") ...[
-                  const SizedBox(height: 10),
-
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: Colors.green.shade50,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: const Row(
-                      crossAxisAlignment:
-                      CrossAxisAlignment.start,
-                      children: [
-
-                        Icon(
-                          Icons.check_circle,
-                          color: Colors.green,
-                        ),
-
-                        SizedBox(width: 10),
-
-                        Expanded(
-                          child: Text(
-                            "El pago de la tarifa oficial ha sido confirmado. "
-                                "Nos estaremos comunicando con usted para informarle "
-                                "sobre las fechas disponibles para la cita de huellas y "
-                                "fotografía (CAS) y la entrevista consular. "
-                                "Coordinaremos con usted las fechas de su preferencia "
-                                "entre las opciones disponibles para gestionar sus citas. "
-                                "Una vez gestionadas, agregaremos las fechas, horas y "
-                                "lugares de sus citas a la plataforma, donde podrá "
-                                "consultarlas en cualquier momento desde su perfil.",
-                            style: TextStyle(
-                              height: 1.5,
-                            ),
-                          ),
-                        ),
-
-                      ],
-                    ),
-                  ),
-                ],
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            // ==================================================
             // PERFIL CAS
             // ==================================================
 
@@ -598,6 +607,7 @@ class _VisaAssistProcessScreenState
 
             _sectionCard(
               title: "📸 Cita CAS (Huella y fotografía)",
+              pasoActual: !_casYaPaso(),
               children: [
 
                 _item(
@@ -646,6 +656,7 @@ class _VisaAssistProcessScreenState
 
             _sectionCard(
               title: "🏛 Entrevista Consular",
+              pasoActual: _casYaPaso(),
               children: [
 
                 _item(
@@ -838,17 +849,58 @@ class _VisaAssistProcessScreenState
   Widget _sectionCard({
     required String title,
     required List<Widget> children,
+    bool pasoActual = false,
   }) {
     return Card(
-      elevation: 3,
+      elevation: pasoActual ? 6 : 3,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
+        side: pasoActual
+            ? BorderSide(
+          color: AppColors.primary,
+          width: 2,
+        )
+            : BorderSide.none,
       ),
       child: Padding(
         padding: const EdgeInsets.all(18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+
+            if (pasoActual)
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(
+                  bottom: 12,
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.10),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.arrow_forward,
+                      color: AppColors.primary,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      "PASO ACTUAL",
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
             Text(
               title,

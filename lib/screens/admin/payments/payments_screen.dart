@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'mrv_requests_screen.dart';
 import '../../../services/payment_service.dart';
 import '../../../models/payment.dart';
 
@@ -31,39 +30,6 @@ class _PaymentsScreenState
 
         centerTitle: true,
 
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 10),
-            child: TextButton.icon(
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                ),
-              ),
-              icon: const Icon(
-                Icons.request_quote,
-                size: 25,
-              ),
-              label: const Text(
-                "MRV",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                    const MrvRequestsScreen(),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
       ),
 
       body: StreamBuilder<List<Payment>>(
@@ -131,18 +97,15 @@ class _PaymentsScreenState
 
                             children: [
 
-                          Text(
-
-                            "${payment.paymentType}: ${payment.expedienteId}",
-
-                            style: const TextStyle(
-
-                              fontWeight:
-                              FontWeight.bold,
-
-                              fontSize: 17,
-                            ),
-                          ),
+                              Text(
+                                payment.paymentType == "service"
+                                    ? "Visa Assist: ${payment.expedienteId}"
+                                    : "Evaluación Premium: ${payment.expedienteId}",
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 17,
+                                ),
+                              ),
 
                           const SizedBox(height: 10),
 
@@ -150,9 +113,9 @@ class _PaymentsScreenState
                             "Usuario: ${payment.userId}",
                           ),
 
-                          Text(
-                            "Monto: ${payment.currency} ${payment.amount}",
-                          ),
+                              Text(
+                                "Monto: ${payment.currency} ${payment.amount.toStringAsFixed(2)}",
+                              ),
 
                           Text(
                             "Método: ${payment.paymentMethod}",

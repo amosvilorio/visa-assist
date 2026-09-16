@@ -5,7 +5,6 @@ import '../../utils/app_colors.dart';
 import '../../services/settings_service.dart';
 
 class ServicePaymentScreen extends StatefulWidget {
-
   final String expedienteId;
 
   const ServicePaymentScreen({
@@ -24,8 +23,12 @@ class _ServicePaymentScreenState
   SettingsService();
 
   double servicePrice = 0;
+  double usdToDopRate = 0;
 
-  String currencySymbol = "RD\$";
+// La moneda de este servicio es USD.
+  // No utilizamos la moneda global para no afectar
+  // otros procesos como la evaluación.
+  String currencySymbol = "US\$";
 
   bool loading = true;
 
@@ -42,8 +45,11 @@ class _ServicePaymentScreenState
     servicePrice =
         (settings["servicePrice"] ?? 0).toDouble();
 
-    currencySymbol =
-        settings["currencySymbol"] ?? "RD\$";
+    usdToDopRate =
+        double.tryParse(
+          settings["usdToDopRate"]?.toString() ?? "",
+        ) ??
+            0;
 
     if (!mounted) return;
 
@@ -62,7 +68,13 @@ class _ServicePaymentScreenState
         ),
         const SizedBox(width: 10),
         Expanded(
-          child: Text(text),
+          child: Text(
+            text,
+            style: const TextStyle(
+              fontSize: 15,
+              height: 1.4,
+            ),
+          ),
         ),
       ],
     );
@@ -87,254 +99,284 @@ class _ServicePaymentScreenState
         ),
       ),
 
-        body: SafeArea(
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(
-              20,
-              20,
-              20,
-              35,
-            ),
-            children: [
-          const Text(
-            "PASO 18 DE 18",
-            style: TextStyle(
-              color: AppColors.primary,
-              fontWeight: FontWeight.bold,
-            ),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(
+            20,
+            20,
+            20,
+            35,
           ),
-
-          const SizedBox(height: 8),
-
-          const Text(
-            "Contratar Servicio Visa Assist",
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
-          const Text(
-            "Para que nuestro equipo comience a trabajar en tu expediente, debes contratar el servicio Visa Assist.",
-            style: TextStyle(
-              fontSize: 16,
-              color: AppColors.textSecondary,
-            ),
-          ),
-
-          const SizedBox(height: 25),
-
-          // --------------------------------------------------
-          // COSTO DEL SERVICIO
-          // --------------------------------------------------
-
-          Card(
-            elevation: 3,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment:
-                CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Costo del servicio",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  Text(
-                    "$currencySymbol ${servicePrice.toStringAsFixed(2)}",
-                    style: const TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
+          children: [
+            const Text(
+              "PASO 18 DE 18",
+              style: TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.bold,
               ),
             ),
-          ),
 
-          const SizedBox(height: 25),
+            const SizedBox(height: 8),
 
-          // --------------------------------------------------
-          // LO QUE INCLUYE
-          // --------------------------------------------------
-
-          Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment:
-                CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Lo que incluye el servicio",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-
-                  const SizedBox(height: 18),
-
-                  buildIncludedItem(
-                    "Revisión completa de tu expediente",
-                  ),
-
-                  const SizedBox(height: 15),
-
-                  buildIncludedItem(
-                    "Llenado profesional del formulario DS-160",
-                  ),
-
-                  const SizedBox(height: 15),
-
-                  buildIncludedItem(
-                    "Creación y configuración del perfil CAS",
-                  ),
-
-                  const SizedBox(height: 15),
-
-                  buildIncludedItem(
-                    "Gestión y creación de la cita para foto y huellas",
-                  ),
-
-                  const SizedBox(height: 15),
-
-                  buildIncludedItem(
-                    "Gestión y creación de la cita consular",
-                  ),
-
-                  const SizedBox(height: 15),
-
-                  buildIncludedItem(
-                    "Seguimiento y asesoría durante el proceso",
-                  ),
-                ],
+            const Text(
+              "Contratar Servicio Visa Assist",
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
               ),
             ),
-          ),
 
-          const SizedBox(height: 25),
+            const SizedBox(height: 12),
 
-          // --------------------------------------------------
-          // AVISO SOBRE PAGOS OFICIALES
-          // --------------------------------------------------
-
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: Colors.amber.shade50,
-              borderRadius: BorderRadius.circular(16),
+            const Text(
+              "Realiza el pago de la tarifa oficial de la visa y el pago por contratar el servicio Visa Assist.",   style: TextStyle(
+                fontSize: 16,
+                color: AppColors.textSecondary,
+                height: 1.5,
+              ),
             ),
-            child: const Column(
-              crossAxisAlignment:
-              CrossAxisAlignment.start,
-              children: [
-                Row(
+
+            const SizedBox(height: 25),
+
+            // --------------------------------------------------
+            // COSTO TOTAL DEL SERVICIO
+            // --------------------------------------------------
+
+            Card(
+              elevation: 3,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
                   crossAxisAlignment:
                   CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      Icons.info_outline,
-                      color: Colors.orange,
+                    const Text(
+                      "Pago total",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
 
-                    SizedBox(width: 10),
+                    const SizedBox(height: 10),
 
-                    Expanded(
-                      child: Text(
-                        "Importante",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                    Text(
+                      "$currencySymbol ${servicePrice.toStringAsFixed(2)}",
+                      style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
+                    if (usdToDopRate > 0) ...[
+                      const SizedBox(height: 8),
+
+                      Text(
+                        "RD\$ ${(servicePrice * usdToDopRate).toStringAsFixed(2)}",
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
                         ),
+                      ),
+                    ],
+
+                    const SizedBox(height: 8),
+
+                    const Text(
+                      "Pago único por el servicio Visa Assist.",
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 14,
                       ),
                     ),
                   ],
                 ),
-
-                SizedBox(height: 10),
-
-                Text(
-                  "El pago indicado corresponde únicamente al servicio Visa Assist. Las tarifas, impuestos y pagos oficiales del proceso de visa no están incluidos y deberán ser pagados por el solicitante cuando corresponda.",
-
-                  style: TextStyle(
-                    height: 1.5,
-                  ),
-                ),
-
-                SizedBox(height: 10),
-
-                Text(
-                  "Una vez realizado el pago oficial correspondiente, nuestro equipo gestionará la creación de la cita para foto y huellas y la cita consular.",
-
-                  style: TextStyle(
-                    height: 1.5,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
 
-          const SizedBox(height: 35),
+            const SizedBox(height: 25),
 
-          // --------------------------------------------------
-          // CONTINUAR AL PAGO
-          // --------------------------------------------------
+            // --------------------------------------------------
+            // LO QUE INCLUYE
+            // --------------------------------------------------
 
-          SizedBox(
-            height: 55,
-            child: ElevatedButton.icon(
-              icon: const Icon(
-                Icons.payment,
+            Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
               ),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment:
+                  CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Lo que incluye el servicio",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
 
-              label: const Text(
-                "CONTINUAR AL PAGO",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+                    const SizedBox(height: 18),
+
+                    buildIncludedItem(
+                      "Revisión completa de tu expediente",
+                    ),
+
+                    const SizedBox(height: 15),
+
+                    buildIncludedItem(
+                      "Llenado profesional del formulario DS-160",
+                    ),
+
+                    const SizedBox(height: 15),
+
+                    buildIncludedItem(
+                      "Creación y configuración del perfil CAS",
+                    ),
+
+                    const SizedBox(height: 15),
+
+                    buildIncludedItem(
+                      "Programación de la cita para foto y huellas",
+                    ),
+
+                    const SizedBox(height: 15),
+
+                    buildIncludedItem(
+                      "Programación de la cita consular",
+                    ),
+
+                    const SizedBox(height: 15),
+
+                    buildIncludedItem(
+                      "Pago de la tarifa oficial de la visa",
+                    ),
+
+                    const SizedBox(height: 15),
+
+                    buildIncludedItem(
+                      "Seguimiento y asesoría durante el proceso",
+                    ),
+                  ],
                 ),
               ),
+            ),
 
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => PaymentMethodScreen(
-                      paymentType: "service",
-                      paymentTitle:
-                      "Expediente Visa Assist",
-                      amount: servicePrice,
-                      currencySymbol:
-                      currencySymbol,
-                      expedienteId:
-                      widget.expedienteId,
+            const SizedBox(height: 25),
+
+            // --------------------------------------------------
+            // AVISO IMPORTANTE
+            // --------------------------------------------------
+
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: Colors.amber.shade50,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: Colors.amber.shade200,
+                ),
+              ),
+              child: const Column(
+                crossAxisAlignment:
+                CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment:
+                    CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.warning_amber_rounded,
+                        color: Colors.orange,
+                      ),
+
+                      SizedBox(width: 10),
+
+                      Expanded(
+                        child: Text(
+                          "Aviso importante",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  SizedBox(height: 12),
+
+                  Text(
+                    "El pago indicado incluye la contratación del servicio Visa Assist y el pago de la tarifa oficial de la visa vigente al momento de realizar el pago.",
+                    style: TextStyle(
+                      height: 1.5,
                     ),
                   ),
-                );
-              },
-            ),
-          ),
 
-              const SizedBox(height: 20),
-            ],
-          ),
+                  SizedBox(height: 10),
+
+                  Text(
+                    "En caso de que la Embajada de los Estados Unidos o las autoridades correspondientes modifiquen la tarifa oficial de la visa después de realizado el pago, el solicitante deberá cubrir el monto adicional correspondiente a la diferencia de la nueva tarifa.",
+                    style: TextStyle(
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 35),
+
+            // --------------------------------------------------
+            // CONTINUAR AL PAGO
+            // --------------------------------------------------
+
+            SizedBox(
+              height: 55,
+              child: ElevatedButton.icon(
+                icon: const Icon(
+                  Icons.payment,
+                ),
+
+                label: const Text(
+                  "CONTINUAR AL PAGO",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          PaymentMethodScreen(
+                            paymentType: "service",
+                            paymentTitle:
+                            "Expediente Visa Assist",
+                            amount: servicePrice,
+                            currencySymbol:
+                            currencySymbol,
+                            expedienteId:
+                            widget.expedienteId,
+                          ),
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            const SizedBox(height: 20),
+          ],
         ),
+      ),
     );
   }
 }
