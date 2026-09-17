@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io';
 
 class SupportChatService {
   final FirebaseFirestore _db =
@@ -176,6 +178,99 @@ class SupportChatService {
   }
 
   // ============================================================
+  // ENVIAR FOTO COMO CLIENTE
+  // ============================================================
+
+  Future<void> sendImage({
+    required File imageFile,
+  }) async {
+
+    final user =
+        _auth.currentUser;
+
+    if (user == null) {
+      throw Exception(
+        'No hay un usuario autenticado.',
+      );
+    }
+
+    await createOrUpdateConversation();
+
+    final conversationRef =
+    _conversations.doc(user.uid);
+
+    final messageRef =
+    conversationRef
+        .collection('messages')
+        .doc();
+
+    final storageRef =
+    FirebaseStorage.instance
+        .ref()
+        .child(
+      'support_chat/${user.uid}/${messageRef.id}.jpg',
+    );
+
+    await storageRef.putFile(
+      imageFile,
+      SettableMetadata(
+        contentType: 'image/jpeg',
+      ),
+    );
+
+    final imageUrl =
+    await storageRef.getDownloadURL();
+
+    final batch =
+    _db.batch();
+
+    batch.set(
+      messageRef,
+      {
+        'id':
+        messageRef.id,
+
+        'text':
+        '',
+
+        'imageUrl':
+        imageUrl,
+
+        'messageType':
+        'image',
+
+        'senderId':
+        user.uid,
+
+        'senderRole':
+        'client',
+
+        'createdAt':
+        FieldValue.serverTimestamp(),
+      },
+    );
+
+    batch.update(
+      conversationRef,
+      {
+        'lastMessage':
+        '📷 Foto',
+
+        'lastMessageAt':
+        FieldValue.serverTimestamp(),
+
+        'unreadForAdmin':
+        true,
+
+        'unreadForClient':
+        false,
+      },
+    );
+
+    await batch.commit();
+  }
+
+  // ============================================================
   // MENSAJES DEL CLIENTE
   // ============================================================
 
@@ -323,6 +418,98 @@ class SupportChatService {
       {
         'lastMessage':
         message,
+
+        'lastMessageAt':
+        FieldValue.serverTimestamp(),
+
+        'unreadForClient':
+        true,
+
+        'unreadForAdmin':
+        false,
+      },
+    );
+
+    await batch.commit();
+  }
+
+  // ============================================================
+  // ENVIAR FOTO COMO ADMINISTRADOR
+  // ============================================================
+
+  Future<void> sendImageAsAdmin({
+    required String clientId,
+    required File imageFile,
+  }) async {
+
+    final user =
+        _auth.currentUser;
+
+    if (user == null) {
+      throw Exception(
+        'No hay un administrador autenticado.',
+      );
+    }
+
+    final conversationRef =
+    _conversations.doc(clientId);
+
+    final messageRef =
+    conversationRef
+        .collection('messages')
+        .doc();
+
+    final storageRef =
+    FirebaseStorage.instance
+        .ref()
+        .child(
+      'support_chat/$clientId/${messageRef.id}.jpg',
+    );
+
+    await storageRef.putFile(
+      imageFile,
+      SettableMetadata(
+        contentType: 'image/jpeg',
+      ),
+    );
+
+    final imageUrl =
+    await storageRef.getDownloadURL();
+
+    final batch =
+    _db.batch();
+
+    batch.set(
+      messageRef,
+      {
+        'id':
+        messageRef.id,
+
+        'text':
+        '',
+
+        'imageUrl':
+        imageUrl,
+
+        'messageType':
+        'image',
+
+        'senderId':
+        user.uid,
+
+        'senderRole':
+        'admin',
+
+        'createdAt':
+        FieldValue.serverTimestamp(),
+      },
+    );
+
+    batch.update(
+      conversationRef,
+      {
+        'lastMessage':
+        '📷 Foto',
 
         'lastMessageAt':
         FieldValue.serverTimestamp(),

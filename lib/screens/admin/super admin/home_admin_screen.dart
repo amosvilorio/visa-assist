@@ -11,6 +11,7 @@ import 'package:visa_app/screens/admin/evaluations/evaluations_screen.dart';
 import '../../notifications/notifications_screen.dart';
 import '../../../services/notification_service.dart';
 import '../../account/deletion_requests_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 
 class HomeAdminScreen extends StatelessWidget {
@@ -233,13 +234,29 @@ class HomeAdminScreen extends StatelessWidget {
         childAspectRatio: 0.90,
         children: [
 
-          moduleCard(
-            context,
-            icon: Icons.people_alt,
-            color: Colors.blue,
-            title: "Usuarios",
-            subtitle: "Clientes registrados",
-            onTap: () {},
+          StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+            stream: FirebaseFirestore.instance
+                .collection("users")
+                .where(
+              "role",
+              isEqualTo: "client",
+            )
+                .snapshots(),
+
+            builder: (context, snapshot) {
+              final cantidadUsuarios =
+                  snapshot.data?.docs.length ?? 0;
+
+              return moduleCard(
+                context,
+                icon: Icons.people_alt,
+                color: Colors.blue,
+                title: "Usuarios",
+                subtitle:
+                "$cantidadUsuarios clientes registrados",
+                onTap: () {},
+              );
+            },
           ),
 
           moduleCard(

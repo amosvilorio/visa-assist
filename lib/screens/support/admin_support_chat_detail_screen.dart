@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../services/support_chat_service.dart';
 
@@ -94,6 +97,87 @@ class _AdminSupportChatDetailScreenState
         SnackBar(
           content: Text(
             'No se pudo enviar: $e',
+          ),
+        ),
+      );
+
+    } finally {
+
+      if (mounted) {
+
+        setState(() {
+          _sending = false;
+        });
+
+      }
+    }
+  }
+
+  Future<void> _pickAndSendImage() async {
+
+    if (_sending) {
+      return;
+    }
+
+    final picker =
+    ImagePicker();
+
+    final pickedFile =
+    await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+    );
+
+    if (pickedFile == null) {
+      return;
+    }
+
+    setState(() {
+      _sending = true;
+    });
+
+    try {
+
+      await _chatService.sendImageAsAdmin(
+        clientId:
+        widget.clientId,
+        imageFile:
+        File(pickedFile.path),
+      );
+
+      await Future.delayed(
+        const Duration(
+          milliseconds: 150,
+        ),
+      );
+
+      if (_scrollController
+          .hasClients) {
+
+        _scrollController.animateTo(
+          _scrollController
+              .position
+              .maxScrollExtent,
+          duration:
+          const Duration(
+            milliseconds: 250,
+          ),
+          curve:
+          Curves.easeOut,
+        );
+      }
+
+    } catch (e) {
+
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+        SnackBar(
+          content: Text(
+            'No se pudo enviar la foto: $e',
           ),
         ),
       );
@@ -263,6 +347,16 @@ class _AdminSupportChatDetailScreenState
                         data['senderRole'] ==
                             'admin';
 
+                    final messageType =
+                        data['messageType']
+                            ?.toString() ??
+                            'text';
+
+                    final imageUrl =
+                        data['imageUrl']
+                            ?.toString() ??
+                            '';
+
                     return Align(
 
                       alignment:
@@ -319,14 +413,60 @@ class _AdminSupportChatDetailScreenState
                           ],
                         ),
 
-                        child: Text(
+                        child: messageType == 'image' &&
+                            imageUrl.isNotEmpty
+                            ? ClipRRect(
+                          borderRadius:
+                          BorderRadius.circular(12),
+                          child: Image.network(
+                            imageUrl,
+                            width: 240,
+                            fit: BoxFit.cover,
+                            loadingBuilder:
+                                (
+                                context,
+                                child,
+                                loadingProgress,
+                                ) {
+                              if (loadingProgress ==
+                                  null) {
+                                return child;
+                              }
 
+                              return const SizedBox(
+                                width: 240,
+                                height: 180,
+                                child: Center(
+                                  child:
+                                  CircularProgressIndicator(),
+                                ),
+                              );
+                            },
+                            errorBuilder:
+                                (
+                                context,
+                                error,
+                                stackTrace,
+                                ) {
+                              return const SizedBox(
+                                width: 240,
+                                height: 100,
+                                child: Center(
+                                  child: Icon(
+                                    Icons.broken_image_outlined,
+                                    size: 40,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        )
+                            : Text(
                           data['text']
                               ?.toString() ??
                               '',
-
-                          style:
-                          TextStyle(
+                          style: TextStyle(
                             color:
                             isAdmin
                                 ? Colors.white
@@ -357,6 +497,22 @@ class _AdminSupportChatDetailScreenState
               child: Row(
 
                 children: [
+
+                  IconButton(
+                    onPressed:
+                    _sending
+                        ? null
+                        : _pickAndSendImage,
+                    icon: const Icon(
+                      Icons.photo_outlined,
+                      color:
+                      Color(0xFF0A3B91),
+                      size: 28,
+                    ),
+                    tooltip:
+                    'Enviar foto',
+                  ),
+
 
                   Expanded(
 
