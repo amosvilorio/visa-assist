@@ -488,6 +488,24 @@ class PaymentService {
         expedienteId: payment.expedienteId,
         serviceStatus: "pendiente",
       );
+
+      //==================================================
+      // NOTIFICAR CLIENTE - PAGO DEL SERVICIO RECHAZADO
+      //==================================================
+
+      await _notificationService.createNotification(
+        userId: payment.userId,
+        title: "Pago del servicio rechazado",
+        message:
+        "Tu comprobante de pago para el servicio Visa Assist fue rechazado. Revisa el motivo y vuelve a enviar un comprobante válido.",
+        type: "service_payment_rejected",
+        expedienteId: payment.expedienteId,
+        data: {
+          "paymentId": payment.id,
+          "paymentType": payment.paymentType,
+          "adminComment": comment,
+        },
+      );
     }
 
     if (payment != null &&

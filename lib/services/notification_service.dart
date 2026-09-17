@@ -7,6 +7,14 @@ import '../models/expediente.dart';
 import '../services/expediente_service.dart';
 import '../screens/expedientes/visa_assist_process_screen.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'dart:convert';
+import '../screens/support/support_chat_screen.dart';
+import '../screens/support/admin_support_chat_detail_screen.dart';
+import '../screens/evaluation/evaluation_question_screen.dart';
+import '../screens/payment/payment_screen.dart';
+import '../screens/admin/evaluations/evaluations_screen.dart';
+import '../screens/admin/payments/payments_screen.dart';
+import '../screens/evaluation/evaluation_detail_screen.dart';
 
 class NotificationService {
 
@@ -318,7 +326,7 @@ class NotificationService {
             await _showLocalNotification(
               title: title,
               body: body,
-              payload: message.data.toString(),
+              payload: jsonEncode(message.data),
             );
           },
         );
@@ -504,6 +512,364 @@ class NotificationService {
       }
 
       // =================================================
+// PAGO RECIBIDO PARA ADMIN
+// =================================================
+
+      if (type == "evaluation_payment_received" ||
+          type == "service_payment_received") {
+        final paymentId =
+            data["paymentId"]?.toString() ?? "";
+
+        if (paymentId.isEmpty) {
+          debugPrint(
+            "NOTIFICACIÓN DE PAGO SIN paymentId.",
+          );
+        }
+
+        final navigator =
+            navigatorKey.currentState;
+
+        if (navigator == null) {
+          debugPrint(
+            "NAVIGATOR AÚN NO ESTÁ DISPONIBLE.",
+          );
+          return;
+        }
+
+        navigator.push(
+          MaterialPageRoute(
+            builder: (_) =>
+            const PaymentsScreen(),
+          ),
+        );
+
+        debugPrint(
+          "ABRIENDO PAGOS PENDIENTES DEL ADMIN.",
+        );
+
+        debugPrint(
+          "PAYMENT ID: $paymentId",
+        );
+
+        return;
+      }
+
+      // =================================================
+// NUEVA EVALUACIÓN PREMIUM PARA ADMIN
+// =================================================
+
+      if (type == "premium_evaluation_submitted") {
+        final evaluationId =
+            data["evaluationId"]?.toString() ??
+                expedienteId;
+
+        if (evaluationId.isEmpty) {
+          debugPrint(
+            "NOTIFICACIÓN PREMIUM SIN evaluationId.",
+          );
+          return;
+        }
+
+        final navigator =
+            navigatorKey.currentState;
+
+        if (navigator == null) {
+          debugPrint(
+            "NAVIGATOR AÚN NO ESTÁ DISPONIBLE.",
+          );
+          return;
+        }
+
+        navigator.push(
+          MaterialPageRoute(
+            builder: (_) =>
+            const EvaluationsScreen(),
+          ),
+        );
+
+        debugPrint(
+          "ABRIENDO EVALUACIONES DEL ADMIN "
+              "DESDE NOTIFICACIÓN PREMIUM.",
+        );
+
+        debugPrint(
+          "EVALUATION ID: $evaluationId",
+        );
+
+        return;
+      }
+
+      // =================================================
+// EVALUACIÓN PREMIUM COMPLETADA
+// =================================================
+
+      if (type == "premium_evaluation_completed") {
+        final evaluationId =
+            data["evaluationId"]?.toString() ??
+                expedienteId;
+
+        if (evaluationId.isEmpty) {
+          debugPrint(
+            "NOTIFICACIÓN DE EVALUACIÓN COMPLETADA "
+                "SIN evaluationId.",
+          );
+          return;
+        }
+
+        final navigator =
+            navigatorKey.currentState;
+
+        if (navigator == null) {
+          debugPrint(
+            "NAVIGATOR AÚN NO ESTÁ DISPONIBLE.",
+          );
+          return;
+        }
+
+        navigator.push(
+          MaterialPageRoute(
+            builder: (_) =>
+                EvaluationDetailScreen(
+                  evaluationId: evaluationId,
+                ),
+          ),
+        );
+
+        debugPrint(
+          "ABRIENDO RESULTADO DE EVALUACIÓN PREMIUM.",
+        );
+
+        debugPrint(
+          "EVALUATION ID: $evaluationId",
+        );
+
+        return;
+      }
+
+      // =================================================
+      // NOTIFICACIÓN DEL CHAT DE SOPORTE
+      // =================================================
+
+      if (type == "support_message_received") {
+        final clientId =
+            data["clientId"]?.toString() ?? "";
+
+        final senderRole =
+            data["senderRole"]?.toString() ?? "";
+
+        if (clientId.isEmpty) {
+          debugPrint(
+            "NOTIFICACIÓN DE SOPORTE SIN clientId.",
+          );
+          return;
+        }
+
+        final navigator =
+            navigatorKey.currentState;
+
+        if (navigator == null) {
+          debugPrint(
+            "NAVIGATOR AÚN NO ESTÁ DISPONIBLE.",
+          );
+          return;
+        }
+
+        // =================================================
+        // CLIENTE RECIBE RESPUESTA DEL ADMIN
+        // =================================================
+
+        if (senderRole == "admin") {
+          navigator.push(
+            MaterialPageRoute(
+              builder: (_) =>
+              const SupportChatScreen(),
+            ),
+          );
+
+          debugPrint(
+            "ABRIENDO CHAT DE SOPORTE DEL CLIENTE.",
+          );
+
+          return;
+        }
+
+        // =================================================
+        // ADMIN RECIBE MENSAJE DEL CLIENTE
+        // =================================================
+
+        if (senderRole == "client") {
+          final clientSnapshot =
+          await _firestore
+              .collection("users")
+              .doc(clientId)
+              .get();
+
+          if (!clientSnapshot.exists) {
+            debugPrint(
+              "NO SE ENCONTRÓ EL CLIENTE: $clientId",
+            );
+            return;
+          }
+
+          final clientData =
+              clientSnapshot.data() ?? {};
+
+          final clientEmail =
+              clientData["email"]?.toString() ??
+                  "";
+
+          navigator.push(
+            MaterialPageRoute(
+              builder: (_) =>
+                  AdminSupportChatDetailScreen(
+                    clientId:
+                    clientId,
+                    clientEmail:
+                    clientEmail,
+                  ),
+            ),
+          );
+
+          debugPrint(
+            "ABRIENDO CHAT DE SOPORTE DEL ADMIN.",
+          );
+
+          return;
+        }
+
+        debugPrint(
+          "senderRole desconocido en soporte: "
+              "$senderRole",
+        );
+
+        return;
+      }
+
+      // =================================================
+// PAGO PREMIUM APROBADO
+// =================================================
+
+      if (type == "evaluation_payment_approved") {
+        final evaluationId =
+            data["evaluationId"]?.toString() ??
+                expedienteId;
+
+        if (evaluationId.isEmpty) {
+          debugPrint(
+            "NO SE PUEDE NAVEGAR: FALTA evaluationId.",
+          );
+          return;
+        }
+
+        final evaluationSnapshot =
+        await _firestore
+            .collection("evaluations")
+            .doc(evaluationId)
+            .get();
+
+        if (!evaluationSnapshot.exists) {
+          debugPrint(
+            "NO SE ENCONTRÓ LA EVALUACIÓN: "
+                "$evaluationId",
+          );
+          return;
+        }
+
+        final evaluationData =
+            evaluationSnapshot.data() ??
+                {};
+
+        final countryCode =
+            evaluationData["countryCode"]?.toString() ??
+                "";
+
+        final visaType =
+            evaluationData["visaType"]?.toString() ??
+                "";
+
+        if (countryCode.isEmpty ||
+            visaType.isEmpty) {
+          debugPrint(
+            "FALTAN DATOS DE LA EVALUACIÓN: "
+                "countryCode=$countryCode, "
+                "visaType=$visaType",
+          );
+          return;
+        }
+
+        final navigator =
+            navigatorKey.currentState;
+
+        if (navigator == null) {
+          debugPrint(
+            "NAVIGATOR AÚN NO ESTÁ DISPONIBLE.",
+          );
+          return;
+        }
+
+        navigator.push(
+          MaterialPageRoute(
+            builder: (_) =>
+                EvaluationQuestionScreen(
+                  evaluationId: evaluationId,
+                  countryCode: countryCode,
+                  visaType: visaType,
+                ),
+          ),
+        );
+
+        debugPrint(
+          "ABRIENDO EVALUACIÓN PREMIUM "
+              "DESDE LA PREGUNTA 11.",
+        );
+
+        return;
+      }
+
+// =================================================
+// PAGO PREMIUM RECHAZADO
+// =================================================
+
+      if (type == "evaluation_payment_rejected") {
+        final evaluationId =
+            data["evaluationId"]?.toString() ??
+                expedienteId;
+
+        if (evaluationId.isEmpty) {
+          debugPrint(
+            "NO SE PUEDE NAVEGAR: FALTA evaluationId.",
+          );
+          return;
+        }
+
+        final navigator =
+            navigatorKey.currentState;
+
+        if (navigator == null) {
+          debugPrint(
+            "NAVIGATOR AÚN NO ESTÁ DISPONIBLE.",
+          );
+          return;
+        }
+
+        navigator.push(
+          MaterialPageRoute(
+            builder: (_) =>
+                PaymentScreen(
+                  evaluationId: evaluationId,
+                ),
+          ),
+        );
+
+        debugPrint(
+          "ABRIENDO PANTALLA DE PAGO PREMIUM "
+              "POR PAGO RECHAZADO.",
+        );
+
+        return;
+      }
+
+      // =================================================
       // NOTIFICACIONES QUE PERTENECEN A UN EXPEDIENTE
       // =================================================
 
@@ -602,6 +968,16 @@ class NotificationService {
   }
 
   // =====================================================
+// NAVEGAR DESDE EL CENTRO DE NOTIFICACIONES
+// =====================================================
+
+  Future<void> handleNotificationData(
+      Map<String, dynamic> data,
+      ) async {
+    await _handleNotificationData(data);
+  }
+
+  // =====================================================
   // AL TOCAR NOTIFICACIÓN LOCAL
   // =====================================================
 
@@ -625,33 +1001,18 @@ class NotificationService {
       final payload =
       response.payload!;
 
-      final cleanedPayload =
-      payload
-          .replaceAll("{", "")
-          .replaceAll("}", "");
+      final decoded =
+      jsonDecode(payload);
 
-      final parts =
-      cleanedPayload.split(", ");
+      if (decoded is! Map) {
+        debugPrint(
+          "PAYLOAD DE NOTIFICACIÓN NO ES UN MAPA.",
+        );
+        return;
+      }
 
       final data =
-      <String, dynamic>{};
-
-      for (final part in parts) {
-        final separator =
-        part.indexOf(":");
-
-        if (separator == -1) {
-          continue;
-        }
-
-        final key =
-        part.substring(0, separator).trim();
-
-        final value =
-        part.substring(separator + 1).trim();
-
-        data[key] = value;
-      }
+      Map<String, dynamic>.from(decoded);
 
       _handleNotificationData(data);
     } catch (e) {

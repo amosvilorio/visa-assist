@@ -41,16 +41,16 @@ class NotificationsScreen extends StatelessWidget {
       case "evaluation_payment_received":
         return Icons.assignment;
 
-      case "premium_evaluation_received":
+      case "premium_evaluation_submitted":
         return Icons.star;
 
       case "ds160_uploaded":
         return Icons.description;
 
-      case "cas_appointment":
+      case "cas_appointment_updated":
         return Icons.camera_alt;
 
-      case "consular_appointment":
+      case "interview_appointment_updated":
         return Icons.event;
 
       case "appointment_reminder_24h":
@@ -67,9 +67,35 @@ class NotificationsScreen extends StatelessWidget {
   Future<void> _openNotification(
       BuildContext context,
       String notificationId,
+      Map<String, dynamic> notificationData,
       ) async {
+
     await _notificationService.markAsRead(
       notificationId: notificationId,
+    );
+
+    final navigationData =
+    <String, dynamic>{
+      ...notificationData,
+    };
+
+    final extraData =
+    notificationData["data"];
+
+    if (extraData is Map) {
+      navigationData.addAll(
+        Map<String, dynamic>.from(
+          extraData,
+        ),
+      );
+    }
+
+    navigationData["notificationId"] =
+        notificationId;
+
+    await _notificationService
+        .handleNotificationData(
+      navigationData,
     );
   }
 
@@ -263,6 +289,7 @@ class NotificationsScreen extends StatelessWidget {
                     _openNotification(
                       context,
                       doc.id,
+                      data,
                     );
                   },
                 ),

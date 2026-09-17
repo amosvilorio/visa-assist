@@ -142,6 +142,70 @@ class _SupportChatScreenState
       return;
     }
 
+    final imageFile =
+    File(pickedFile.path);
+
+    if (!mounted) {
+      return;
+    }
+
+    final confirmar =
+    await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text(
+            'Enviar foto',
+            style: TextStyle(
+              fontWeight:
+              FontWeight.bold,
+            ),
+          ),
+          content: ClipRRect(
+            borderRadius:
+            BorderRadius.circular(12),
+            child: Image.file(
+              imageFile,
+              width: 260,
+              height: 260,
+              fit: BoxFit.cover,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(
+                  dialogContext,
+                  false,
+                );
+              },
+              child: const Text(
+                'Cancelar',
+              ),
+            ),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pop(
+                  dialogContext,
+                  true,
+                );
+              },
+              icon: const Icon(
+                Icons.send,
+              ),
+              label: const Text(
+                'Enviar',
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmar != true) {
+      return;
+    }
+
     setState(() {
       _sending = true;
     });
@@ -150,7 +214,7 @@ class _SupportChatScreenState
 
       await _chatService.sendImage(
         imageFile:
-        File(pickedFile.path),
+        imageFile,
       );
 
       await Future.delayed(

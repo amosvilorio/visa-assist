@@ -204,7 +204,7 @@ class _PortalScreenState extends State<PortalScreen> {
               crossAxisCount: 2,
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
-              childAspectRatio: 0.92,
+              childAspectRatio: 0.78,
               shrinkWrap: true,
               physics:
               const NeverScrollableScrollPhysics(),
